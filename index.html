@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Communauto Car Notify</title>
+    <meta name="description" content="Find the closest Communauto cars to your location seamlessly.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="layout-container">
+        <div class="app-container">
+            <header>
+                <h1>Car Notify</h1>
+                <p class="subtitle">Find your next ride instantly</p>
+            </header>
+
+            <main>
+                <form id="notify-form">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <select id="city" name="city">
+                            <option value="montreal" selected>Montreal</option>
+                            <option value="quebec">Quebec</option>
+                            <option value="toronto">Toronto</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="distance">Starting Radius (meters)</label>
+                        <input type="number" id="distance" name="distance" value="600" min="100" max="10000" step="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="delay">Check Interval (seconds)</label>
+                        <input type="number" id="delay" name="delay" value="15" min="5" max="300">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location (Optional: lat,lng)</label>
+                        <div class="location-input-wrapper">
+                            <input type="text" id="location" name="location" placeholder="Leave empty for GPS">
+                            <button type="button" id="btn-geolocation" class="icon-btn" title="Use Current Location">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-start" class="primary-btn">Start Searching</button>
+                    <button type="button" id="btn-stop" class="danger-btn hidden">Stop Searching</button>
+                </form>
+
+                <div id="status-container" class="status-container hidden">
+                    <div class="loader"></div>
+                    <p id="status-text">Initializing...</p>
+                </div>
+
+                <div id="results-container" class="results-container">
+                    <!-- Cars will appear here -->
+                </div>
+            </main>
+        </div>
+
+        <div class="map-container hidden" id="map-wrapper">
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
