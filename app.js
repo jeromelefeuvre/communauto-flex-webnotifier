@@ -24,6 +24,7 @@ let isSearching = false;
 let searchTimeout = null;
 let currentDistanceRadius = 1500;
 let userLocation = null;
+let lastSearchLocation = null;
 
 // Map Variables
 let map = null;
@@ -89,6 +90,10 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
+    const isSameLocation = lastSearchLocation && lastSearchLocation[0] === userLocation[0] && lastSearchLocation[1] === userLocation[1];
+    const shouldFitBounds = !isSameLocation;
+    lastSearchLocation = [...userLocation];
+
     currentDistanceRadius = initialDistance;
     isSearching = true;
 
@@ -102,7 +107,7 @@ form.addEventListener('submit', async (e) => {
     if (!map) {
         initMap(userLocation[0], userLocation[1]);
     } else {
-        updateMapCenter(userLocation[0], userLocation[1]);
+        updateMapCenter(userLocation[0], userLocation[1], shouldFitBounds);
     }
     setTimeout(() => map.invalidateSize(), 100);
 
@@ -263,12 +268,15 @@ function initMap(lat, lng) {
         maxZoom: 20
     }).addTo(map);
 
-    updateMapCenter(lat, lng);
+    updateMapCenter(lat, lng, true);
 }
 
-function updateMapCenter(lat, lng) {
+function updateMapCenter(lat, lng, fitBounds = true) {
     if (!map) return;
-    map.setView([lat, lng], 14);
+
+    if (fitBounds) {
+        map.setView([lat, lng], 14);
+    }
 
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([lat, lng], {
@@ -289,8 +297,10 @@ function updateMapCenter(lat, lng) {
         radius: currentDistanceRadius
     }).addTo(map);
 
-    // Zoom the map to perfectly fit the search radius
-    map.fitBounds(searchCircle.getBounds(), { padding: [20, 20] });
+    if (fitBounds) {
+        // Zoom the map to perfectly fit the search radius
+        map.fitBounds(searchCircle.getBounds(), { padding: [20, 20] });
+    }
 }
 
 function drawCarsOnMap(filteredCars, city) {
