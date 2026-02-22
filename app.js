@@ -37,6 +37,16 @@ let lastRoutedCoord = null; // Prevent spamming routing API
 if (window.Notification && Notification.permission !== "granted") {
     Notification.requestPermission();
 }
+window.addEventListener('DOMContentLoaded', () => {
+    // If geolocation permission is already granted, auto-fetch the user's location
+    if (navigator.permissions && navigator.geolocation) {
+        navigator.permissions.query({ name: 'geolocation' }).then(result => {
+            if (result.state === 'granted') {
+                btnGeo.click();
+            }
+        });
+    }
+});
 
 btnGeo.addEventListener('click', async () => {
     btnGeo.disabled = true;
@@ -48,6 +58,9 @@ btnGeo.addEventListener('click', async () => {
         const lng = position.coords.longitude.toFixed(6);
         locationInput.value = `${lat},${lng}`;
         userLocation = [parseFloat(lat), parseFloat(lng)];
+
+        // Automatically start the search once the location is successfully found
+        btnStart.click();
     } catch (err) {
         alert("Could not get location. Please type it in manually (lat,lng).");
     } finally {
