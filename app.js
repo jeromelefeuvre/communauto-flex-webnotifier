@@ -166,16 +166,20 @@ async function searchLoop(city, delay) {
             distance: calculateDistance(userLocation[0], userLocation[1], vehicle.Latitude, vehicle.Longitude),
         }));
 
-        const filteredCars = cars
+        const alertCars = cars
             .filter(car => car.distance <= currentDistanceRadius)
             .sort((a, b) => a.distance - b.distance);
 
-        drawCarsOnMap(filteredCars, city);
+        const mapCars = cars
+            .filter(car => car.distance <= currentDistanceRadius + 200)
+            .sort((a, b) => a.distance - b.distance);
 
-        statusText.innerText = `${cars.length} cars found. ${filteredCars.length} within ${humanDistance(currentDistanceRadius)}. Waiting...`;
+        drawCarsOnMap(mapCars, city);
 
-        if (filteredCars.length > 0) {
-            const car = filteredCars[0];
+        statusText.innerText = `${cars.length} cars found. ${alertCars.length} within ${humanDistance(currentDistanceRadius)} (${mapCars.length} map total). Waiting...`;
+
+        if (alertCars.length > 0) {
+            const car = alertCars[0];
             const nextSmallerRadius = distanceRadii.find(i => i < car.distance);
 
             showSuccessCar(car, city);
