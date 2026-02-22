@@ -189,7 +189,7 @@ async function searchLoop(city, delay) {
                 currentDistanceRadius = nextSmallerRadius;
                 if (searchCircle) searchCircle.setRadius(currentDistanceRadius);
             } else {
-                stopSearch('Closest possible car found! Search stopped.');
+                stopSearch();
                 return;
             }
         } else {
