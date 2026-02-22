@@ -23,7 +23,7 @@ const mimeTypes = {
     '.wasm': 'application/wasm'
 };
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
     // Enable CORS for all routes (just in case)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
@@ -31,60 +31,64 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'OPTIONS') {
         res.writeHead(200);
-        res.end();
-        return;
+        return res.end();
     }
 
-    // Proxy the reservauto API
+    // Route handling
     if (req.url.startsWith('/api/cars')) {
-        const targetUrl = new URL(req.url.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
-
-        console.log(`Proxying request to: ${targetUrl.href}`);
-
-        https.get(targetUrl, (proxyRes) => {
-            res.writeHead(proxyRes.statusCode, {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            });
-            proxyRes.pipe(res);
-        }).on('error', (err) => {
-            console.error('Proxy Error:', err);
-            res.writeHead(500);
-            res.end(JSON.stringify({ error: err.message }));
-        });
-        return;
+        return handleApiProxy(req, res);
     }
 
-    // Proxy Images to bypass SameSite/CORS
     if (req.url.startsWith('/proxy-image')) {
-        const urlParams = new URLSearchParams(req.url.split('?')[1]);
-        const imgUrl = urlParams.get('url');
-
-        if (!imgUrl) {
-            res.writeHead(400);
-            res.end('Missing url parameter');
-            return;
-        }
-
-        console.log(`Proxying image request to: ${imgUrl}`);
-
-        const protocol = imgUrl.startsWith('https') ? https : http;
-
-        protocol.get(imgUrl, (proxyRes) => {
-            res.writeHead(proxyRes.statusCode, {
-                'Content-Type': proxyRes.headers['content-type'] || 'image/png',
-                'Access-Control-Allow-Origin': '*'
-            });
-            proxyRes.pipe(res);
-        }).on('error', (err) => {
-            console.error('Image Proxy Error:', err);
-            res.writeHead(500);
-            res.end('Error fetching image');
-        });
-        return;
+        return handleImageProxy(req, res);
     }
 
-    // Serve Static Files
+    return handleStaticFiles(req, res);
+});
+
+function handleApiProxy(req, res) {
+    const targetUrl = new URL(req.url.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
+    console.log(`[API] Proxying request to: ${targetUrl.href}`);
+
+    https.get(targetUrl, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        });
+        proxyRes.pipe(res);
+    }).on('error', (err) => {
+        console.error('[API] Proxy Error:', err);
+        res.writeHead(500);
+        res.end(JSON.stringify({ error: err.message }));
+    });
+}
+
+function handleImageProxy(req, res) {
+    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+    const imgUrl = urlParams.get('url');
+
+    if (!imgUrl) {
+        res.writeHead(400);
+        return res.end('Missing url parameter');
+    }
+
+    console.log(`[IMG] Proxying image request to: ${imgUrl}`);
+    const protocol = imgUrl.startsWith('https') ? https : http;
+
+    protocol.get(imgUrl, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, {
+            'Content-Type': proxyRes.headers['content-type'] || 'image/png',
+            'Access-Control-Allow-Origin': '*'
+        });
+        proxyRes.pipe(res);
+    }).on('error', (err) => {
+        console.error('[IMG] Image Proxy Error:', err);
+        res.writeHead(500);
+        res.end('Error fetching image');
+    });
+}
+
+function handleStaticFiles(req, res) {
     let filePath = '.' + req.url;
     if (filePath === './') filePath = './index.html';
 
@@ -105,8 +109,7 @@ const server = http.createServer(async (req, res) => {
             res.end(content, 'utf-8');
         }
     });
-
-});
+}
 
 server.listen(PORT, () => {
     console.log(`[🚀] Car Notify Web App running at http://localhost:${PORT}`);
