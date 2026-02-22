@@ -24,6 +24,10 @@ const { values } = parseArgs({
       type: 'string',
       short: 'l',
     },
+    distance: {
+      type: 'string',
+      short: 'D',
+    },
     help: {
       type: "boolean",
       short: "h",
@@ -37,10 +41,10 @@ Usage: node run.mjs [options]
 
 Options:
   -d, --delay <seconds>   Delay between requests (default: 15)
-  -c, --city <name>       City name (default: toronto). Supported cities: ${
-    Object.keys(branchIds).join(", ")
-  }
+  -c, --city <name>       City name (default: toronto). Supported cities: ${Object.keys(branchIds).join(", ")
+    }
   -l, --location <coord>  Location coordinates (e.g. "43.7,-79.4")
+  -D, --distance <meters> Maximum distance in meters (default: 1500)
   -h, --help              Show this help message
 
 Examples:
@@ -78,7 +82,7 @@ const distanceRadii = [
   200,
 ];
 
-let distanceRadius = distanceRadii[0];
+let distanceRadius = values.distance ? parseInt(values.distance) : distanceRadii[7];
 
 let notificationId, notifyResult;
 
@@ -95,11 +99,11 @@ console.log('Current location: %s, %s', ...location);
 
 
 
-while(true) {
+while (true) {
   const cars = await getCars(location);
   const filteredCars = cars
     .filter(car => car.distance <= distanceRadius)
-    .sort((a,b) => a.distance - b.distance);
+    .sort((a, b) => a.distance - b.distance);
 
   console.log(
     '%i cars found. %i within %s. Waiting %i seconds',
@@ -132,12 +136,24 @@ while(true) {
 
     const res = spawnSync('notify-send', args);
 
-    [notificationId, notifyResult] = res.stdout.toString().split('\n');
-    switch(notifyResult) {
+    if (res.error) {
+      if (process.platform === 'darwin') {
+        spawnSync('osascript', ['-e', `display notification "${car.brand} ${car.model} is ${Math.floor(car.distance)}m away" with title "Car found!"`]);
+      } else {
+        console.error('Failed to run notify-send:', res.error.message);
+      }
+      notifyResult = null;
+    } else if (res.stdout) {
+      const parts = res.stdout.toString().split('\n');
+      notificationId = parts[0];
+      notifyResult = parts[1];
+    }
+
+    switch (notifyResult) {
       case 'open':
-        spawnSync('xdg-open', [`https://${values.branchId === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`]);
+        spawnSync(process.platform === 'darwin' ? 'open' : 'xdg-open', [`https://${values.branchId === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`]);
         break;
-      case 'reduce' :
+      case 'reduce':
         distanceRadius = nextSmallerRadius;
         break;
       case 'stop':
@@ -166,7 +182,7 @@ async function getCars(location) {
     async () => await fetch(url),
   );
   const json = await result.json();
-  return json.d.Vehicles.map( vehicle => ({
+  return json.d.Vehicles.map(vehicle => ({
     brand: vehicle.CarBrand,
     model: vehicle.CarModel,
     plate: vehicle.CarPlate,
@@ -183,21 +199,21 @@ async function getLocation() {
   console.log('Getting current location');
   const result =
     execSync('/usr/libexec/geoclue-2.0/demos/where-am-i -t 6')
-    .toString();
+      .toString();
 
   const obj = Object.fromEntries(
-    result.split('\n').map( line => line.split(':').map(k => k.trim()))
+    result.split('\n').map(line => line.split(':').map(k => k.trim()))
   );
   let lat = obj['Latitude']
   let lon = obj['Longitude']
 
   if (!lat) {
     const ipRes = await fetch("https://api.ipify.org?format=json")
-    const { ip }= await ipRes.json();
-    
+    const { ip } = await ipRes.json();
+
     const locationRes = await fetch(`http://ip-api.com/json/${ip}`)
     const locationObj = await locationRes.json()
-    
+
     lon = locationObj.lon;
     lat = locationObj.lat;
 
@@ -224,7 +240,7 @@ function calculateDistance(lat1, lng1, lat2, lng2) {
 
   const distance = earthRadius * c;
 
-  return distance*1000;
+  return distance * 1000;
 }
 
 function toRadians(degrees) {
@@ -240,22 +256,22 @@ function wait(ms) {
 function humanDistance(inp) {
 
   if (inp < 1000) return inp + 'm';
-  return (inp/1000) + 'km';
+  return (inp / 1000) + 'km';
 
 }
 
 async function retry(cb, times = 3, delay = 1000) {
 
-  try{
+  try {
     return await cb();
   } catch (err) {
 
-    if (times===0) {
+    if (times === 0) {
       throw err;
     } else {
-      console.warn('Function failed with error %s. Trying again in %s seconds', err, delay/1000)
+      console.warn('Function failed with error %s. Trying again in %s seconds', err, delay / 1000)
       await wait(delay);
-      return retry(cb, times-1, delay);
+      return retry(cb, times - 1, delay);
     }
 
   }
