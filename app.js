@@ -30,6 +30,8 @@ let map = null;
 let carMarkers = [];
 let userMarker = null;
 let searchCircle = null;
+let activeRoute = null; // New variable to track the drawn route
+let lastRoutedCoord = null; // Prevent spamming routing API
 
 // Ask for notification permission early
 if (window.Notification && Notification.permission !== "granted") {
@@ -119,6 +121,10 @@ function stopSearch(message) {
     locationInput.disabled = false;
     btnGeo.disabled = false;
 
+    if (activeRoute) map.removeLayer(activeRoute);
+    activeRoute = null;
+    lastRoutedCoord = null;
+
     if (message) alert(message);
 }
 
@@ -151,7 +157,7 @@ async function searchLoop(city, delay) {
             .filter(car => car.distance <= currentDistanceRadius)
             .sort((a, b) => a.distance - b.distance);
 
-        drawCarsOnMap(filteredCars);
+        drawCarsOnMap(filteredCars, city);
 
         statusText.innerText = `${cars.length} cars found. ${filteredCars.length} within ${humanDistance(currentDistanceRadius)}. Waiting...`;
 
@@ -187,14 +193,30 @@ function showSuccessCar(car, city) {
     const bookingUrl = `https://${branchIds[city] === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`;
 
     resultsContainer.innerHTML = `
-        <div class="car-card">
+        <div class="car-card" id="success-car-card">
             <div class="car-info">
                 <h3>${car.brand} ${car.model}</h3>
-                <p>${Math.floor(car.distance)}m away • Plate: ${car.plate} • ${car.color}</p>
+                <p id="car-card-desc">${Math.floor(car.distance)}m away (straight line) • Plate: ${car.plate} • ${car.color}</p>
             </div>
             <a href="${bookingUrl}" target="_blank" class="book-btn">Reserve</a>
         </div>
     `;
+}
+
+function updateCarUIWithWalkingData(car, city, routeData) {
+    const cardDesc = document.getElementById('car-card-desc');
+    const walkDistanceStr = humanDistance(routeData.distance);
+    const walkMins = Math.round(routeData.duration / 60);
+
+    if (cardDesc) {
+        cardDesc.innerText = `${walkDistanceStr} walking (${walkMins} min) • Plate: ${car.plate} • ${car.color}`;
+    }
+
+    // Update marker popup if it exists
+    const marker = carMarkers.find(m => m.getLatLng().lat === car.lat && m.getLatLng().lng === car.lng);
+    if (marker) {
+        marker.setPopupContent(`<b>${car.brand} ${car.model}</b><br>${walkDistanceStr} walk (${walkMins} min)<br>Plate: ${car.plate}`);
+    }
 }
 
 function sendDesktopNotification(car, city, nextSmallerRadius) {
@@ -251,7 +273,7 @@ function updateMapCenter(lat, lng) {
     }).addTo(map);
 }
 
-function drawCarsOnMap(filteredCars) {
+function drawCarsOnMap(filteredCars, city) {
     if (!map) return;
 
     // Clear old markers
@@ -267,9 +289,55 @@ function drawCarsOnMap(filteredCars) {
 
     filteredCars.forEach(car => {
         const marker = L.marker([car.lat, car.lng], { icon: carIcon }).addTo(map);
-        marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>${Math.floor(car.distance)}m away<br>Plate: ${car.plate}`);
+        marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>${Math.floor(car.distance)}m away (straight line)<br>Plate: ${car.plate}`);
+
+        marker.on('click', () => {
+            drawRouteToCar(userLocation[0], userLocation[1], car.lat, car.lng).then(routeData => {
+                if (routeData) {
+                    updateCarUIWithWalkingData(car, city, routeData);
+                }
+            });
+        });
+
         carMarkers.push(marker);
     });
+}
+
+async function drawRouteToCar(startLat, startLng, endLat, endLng) {
+    if (!map) return;
+    const coordString = `${endLat},${endLng}`;
+    if (lastRoutedCoord === coordString) return;
+
+    if (activeRoute) map.removeLayer(activeRoute);
+    lastRoutedCoord = coordString;
+
+    try {
+        const url = `https://router.project-osrm.org/route/v1/foot/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.routes && data.routes.length > 0) {
+            const routeGeoJSON = data.routes[0].geometry;
+            activeRoute = L.geoJSON(routeGeoJSON, {
+                style: {
+                    color: '#3b82f6',
+                    weight: 6,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }
+            }).addTo(map);
+
+            map.fitBounds(activeRoute.getBounds(), { padding: [50, 50] });
+
+            return {
+                distance: data.routes[0].distance,
+                duration: data.routes[0].duration
+            };
+        }
+    } catch (e) {
+        console.error("Could not fetch route", e);
+    }
+    return null;
 }
 
 // Math Helpers
