@@ -1,0 +1,26 @@
+{
+  "name": "communauto-car-notify",
+  "version": "1.0.0",
+  "description": "Look for close-by Communauto flex cars and get an alert ========================================================",
+  "main": "app.js",
+  "scripts": {
+    "test": "playwright test",
+    "postinstall": "playwright install chromium"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evert/communauto-car-notify.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/evert/communauto-car-notify/issues"
+  },
+  "homepage": "https://github.com/evert/communauto-car-notify#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2"
+  }
+}

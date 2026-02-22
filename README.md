@@ -58,12 +58,11 @@ If you are modifying the codebase and want to verify your changes haven't broken
 
 1. Install the testing dependencies:
 ```bash
-npm install -D playwright @playwright/test
-npx playwright install chromium
+npm install
 ```
 2. Run the automated test suite:
 ```bash
-npx playwright test
+npm test
 ```
 
 The test framework will invisibly launch a headless browser, start the local server, mock Montreal geolocation coordinates, interact with the map DOM elements, and verify the frontend logic is completely stable.
