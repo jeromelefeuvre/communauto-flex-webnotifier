@@ -52,7 +52,7 @@ btnGeo.addEventListener('click', async () => {
     btnGeo.disabled = true;
     try {
         const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+            navigator.geolocation.getCurrentPosition(resolve, reject);
         });
         const lat = position.coords.latitude.toFixed(6);
         const lng = position.coords.longitude.toFixed(6);
@@ -62,7 +62,7 @@ btnGeo.addEventListener('click', async () => {
         // Automatically start the search once the location is successfully found
         btnStart.click();
     } catch (err) {
-        alert("Could not get location. Please type it in manually (lat,lng).");
+        alert("Could not get location. Ensure your browser has location permissions enabled for this site, or type it manually (lat,lng).");
     } finally {
         btnGeo.disabled = false;
     }
@@ -284,6 +284,9 @@ function updateMapCenter(lat, lng) {
         weight: 2,
         radius: currentDistanceRadius
     }).addTo(map);
+
+    // Zoom the map to perfectly fit the search radius
+    map.fitBounds(searchCircle.getBounds(), { padding: [20, 20] });
 }
 
 function drawCarsOnMap(filteredCars, city) {
