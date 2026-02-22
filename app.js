@@ -267,7 +267,6 @@ UIController.els.form.addEventListener('submit', async (e) => {
     }
 
     const isSameLocation = AppState.lastSearchLocation && AppState.lastSearchLocation[0] === AppState.userLocation[0] && AppState.lastSearchLocation[1] === AppState.userLocation[1];
-    const shouldFitBounds = !isSameLocation;
     AppState.lastSearchLocation = [...AppState.userLocation];
 
     AppState.currentDistanceRadius = initialDistance;
@@ -278,6 +277,25 @@ UIController.els.form.addEventListener('submit', async (e) => {
     if (!MapController.map) {
         MapController.init(AppState.userLocation[0], AppState.userLocation[1]);
     } else {
+        // If it's a new location, always fit bounds.
+        // If it's the same location, only fit bounds if the current view doesn't fully show the search circle
+        let shouldFitBounds = !isSameLocation;
+
+        if (isSameLocation && MapController.searchCircle) {
+            // Temporarily update circle to get new bounds without drawing yet
+            MapController.searchCircle.setRadius(initialDistance);
+            const circleBounds = MapController.searchCircle.getBounds();
+            const mapBounds = MapController.map.getBounds();
+
+            // If we are zoomed IN (map bounds are smaller than and inside the circle bounds)
+            // we leave the zoom alone.
+            // If we are zoomed OUT (map shows more than the circle) or panned away,
+            // we want to fit bounds to perfectly frame the circle.
+            if (!circleBounds.contains(mapBounds)) {
+                shouldFitBounds = true;
+            }
+        }
+
         MapController.updateCenter(AppState.userLocation[0], AppState.userLocation[1], shouldFitBounds);
     }
     setTimeout(() => MapController.map.invalidateSize(), 100);
@@ -347,7 +365,10 @@ const AppController = {
 
                 if (nextSmallerRadius) {
                     AppState.currentDistanceRadius = nextSmallerRadius;
-                    if (MapController.searchCircle) MapController.searchCircle.setRadius(AppState.currentDistanceRadius);
+                    if (MapController.searchCircle) {
+                        MapController.searchCircle.setRadius(AppState.currentDistanceRadius);
+                        MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
+                    }
                 } else {
                     stopSearch();
                     return;
