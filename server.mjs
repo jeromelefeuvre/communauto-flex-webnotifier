@@ -48,6 +48,10 @@ const server = http.createServer((req, res) => {
         return handleApiProxy(requestUrl, res);
     }
 
+    if (requestUrl.startsWith('/api/version')) {
+        return handleVersionProxy(res);
+    }
+
     if (requestUrl.startsWith('/proxy-image')) {
         return handleImageProxy(requestUrl, res);
     }
@@ -69,6 +73,24 @@ function handleApiProxy(requestUrl, res) {
         console.error('[API] Proxy Error:', err);
         res.writeHead(500);
         res.end(JSON.stringify({ error: err.message }));
+    });
+}
+
+function handleVersionProxy(res) {
+    fs.readFile('./package.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error('[API] Version Error:', err);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ version: 'unknown' }));
+        }
+        try {
+            const pkg = JSON.parse(data);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ version: pkg.version }));
+        } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ version: 'error' }));
+        }
     });
 }
 
