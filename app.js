@@ -369,6 +369,11 @@ const AppController = {
                         MapController.searchCircle.setRadius(AppState.currentDistanceRadius);
                         MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
                     }
+
+                    // Continue searching at the new smaller radius
+                    AppState.searchTimeout = setTimeout(() => {
+                        this.searchLoop(city, delay);
+                    }, delay);
                 } else {
                     stopSearch();
                     return;

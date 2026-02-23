@@ -6,6 +6,36 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Auto-accept any alerts the app throws (e.g. Stop Search)
         page.on('dialog', dialog => dialog.accept());
 
+        // Intercept API calls to avoid spamming the live Communauto servers
+        await page.route('**/api/cars*', async route => {
+            const mockData = {
+                d: {
+                    Vehicles: [
+                        {
+                            CarBrand: "Mock",
+                            CarModel: "Close Car",
+                            CarPlate: "TEST 01",
+                            CarColor: "Blue",
+                            Latitude: 45.550000, // Very close to user
+                            Longitude: -73.652000
+                        },
+                        {
+                            CarBrand: "Mock",
+                            CarModel: "Far Car",
+                            CarPlate: "TEST 02",
+                            CarColor: "Red",
+                            Latitude: 45.580000, // ~3.3km away (inside 5km, outside 1km)
+                            Longitude: -73.652279
+                        }
+                    ]
+                }
+            };
+
+            // Artificial network delay to allow UI to show 'Fetching cars' state
+            await new Promise(r => setTimeout(r, 500));
+            await route.fulfill({ json: mockData });
+        });
+
         // Mock geolocation to Montreal
         await page.context().grantPermissions(['geolocation']);
         await page.context().setGeolocation({ latitude: 45.549831, longitude: -73.652279 });
