@@ -4,10 +4,6 @@ const branchIds = {
     toronto: 3,
 };
 
-const distanceRadii = [
-    10000, 8000, 6000, 5000, 4000, 3000, 2000, 1500, 1000, 900, 800, 700, 600, 500, 400, 300, 200
-];
-
 const earthRadius = 6371; // In km
 
 // UI Controller
@@ -82,7 +78,7 @@ const AppState = {
     isFirstInitEvent: true,
     isSearching: false,
     searchTimeout: null,
-    currentDistanceRadius: 1500,
+    currentDistanceRadius: 600,
     userLocation: null,
     lastSearchLocation: null
 };
@@ -317,6 +313,8 @@ UIController.els.form.addEventListener('submit', async (e) => {
 
 
     const executeSearch = () => {
+        if (!AppState.isSearching) return; // Abort if user clicked stop before layout tick finished
+
         MapController.map.invalidateSize();
         if (shouldFitBounds && MapController.searchCircle) {
             MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
@@ -390,28 +388,12 @@ const AppController = {
 
             if (alertCars.length > 0) {
                 const car = alertCars[0];
-                const nextSmallerRadius = distanceRadii.find(i => i < car.distance);
 
                 UIController.showSuccessCar(car, city);
-                this.sendDesktopNotification(car, city, nextSmallerRadius);
+                this.sendDesktopNotification(car, city);
 
-                if (nextSmallerRadius) {
-                    AppState.currentDistanceRadius = nextSmallerRadius;
-                    UIController.els.distance.value = nextSmallerRadius; // Sync UI form with internal shrinking state
-
-                    if (MapController.searchCircle) {
-                        MapController.searchCircle.setRadius(AppState.currentDistanceRadius);
-                        MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
-                    }
-
-                    // Continue searching at the new smaller radius
-                    AppState.searchTimeout = setTimeout(() => {
-                        this.searchLoop(city, delay);
-                    }, delay);
-                } else {
-                    stopSearch();
-                    return;
-                }
+                stopSearch();
+                return;
             } else {
                 UIController.els.resultsContainer.innerHTML = ''; // Clear stale results
             }
@@ -426,11 +408,11 @@ const AppController = {
         }
     },
 
-    sendDesktopNotification: function (car, city, nextSmallerRadius) {
+    sendDesktopNotification: function (car, city) {
         if (!window.Notification || Notification.permission !== "granted") return;
 
         const notification = new Notification("Communauto Found!", {
-            body: `${car.brand} ${car.model} is ${Math.floor(car.distance)}m away.` + (nextSmallerRadius ? ` Reducing search radius to ${MathUtils.humanDistance(nextSmallerRadius)}.` : ''),
+            body: `${car.brand} ${car.model} is ${Math.floor(car.distance)}m away.`,
             icon: 'https://communauto.com/wp-content/uploads/2021/03/cropped-favicon-32x32.png',
             requireInteraction: true
         });

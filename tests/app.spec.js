@@ -17,7 +17,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
                             CarModel: "Close Car",
                             CarPlate: "TEST 01",
                             CarColor: "Blue",
-                            Latitude: 45.552531, // ~300m away (inside 600m limit, outside 200m)
+                            Latitude: 45.556000, // ~686m away (outside 600m limit, inside 800m map buffer)
                             Longitude: -73.652000
                         },
                         {
@@ -60,6 +60,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await page.click('#btn-stop');
         await page.waitForSelector('#btn-start', { state: 'visible' });
         await page.waitForSelector('#btn-stop', { state: 'hidden' });
+
 
         // Start it again
         await page.click('#btn-start');
@@ -124,83 +125,32 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         expect(currentCenter.lng).toBeCloseTo(initialCenter.lng, 5);
     });
 
-    test('UI Search radius updates when a closer car is found', async ({ page }) => {
+    test('UI Search radius remains unchanged when a car is found', async ({ page }) => {
         // Wait for the app to load and auto-search to start
         await expect(page.locator('#btn-stop')).toBeVisible();
         await page.click('#btn-stop');
         await page.waitForSelector('#btn-start', { state: 'visible' });
 
-        // Change distance to 600m
-        await page.fill('#distance', '600');
+        // Change distance to 800m to include the car
+        await page.fill('#distance', '800');
         await page.click('#btn-start');
 
-        // The mock API returns a car at ~300m away. 
-        // The greedy search should automatically shrink the radius to keep looking.
-        await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
+        // The mock API returns a car at ~686m away.
+        // It should find the car, show it, and stop searching, but NOT shrink the radius.
+        await expect(page.locator('#success-car-card')).toBeVisible({ timeout: 15000 });
 
-        // We expect the distance input to sync downwards from 600
-        await page.waitForTimeout(1000);
+        // The visible value should remain 800
         const visibleValue = await page.evaluate(() => document.getElementById('distance').value);
-        expect(parseInt(visibleValue)).toBeLessThan(600);
+        expect(parseInt(visibleValue)).toBe(800);
 
-        // Ensure map circle also updated to match the visible input
+        // Map circle should remain 800
         const updatedRadius = await page.evaluate(() => {
             return window.MapController.searchCircle ? window.MapController.searchCircle.getRadius() : null;
         });
-        expect(updatedRadius).toBe(parseInt(visibleValue));
+        expect(updatedRadius).toBe(800);
+
+        // Ensure search has dynamically stopped (Start button is visible again)
+        await expect(page.locator('#btn-start')).toBeVisible();
     });
 
-    test('Verify Zoom Radius behavior', async ({ page }) => {
-        // Reload the page and wait for the UI to hydrate
-        await page.reload();
-
-        // Halt the auto-search deterministically. 
-        // We use a short timeout because on fast CI servers, the search might already auto-complete and hide the stop button.
-        try {
-            await page.click('#btn-stop', { timeout: 3000 });
-        } catch (e) {
-            // Button was already hidden or search auto-completed. That's fine.
-        }
-
-        // We are now deterministically halted and clean
-        await page.waitForSelector('#btn-start', { state: 'visible' });
-
-        // Setup initial manual search distance
-        await page.fill('#distance', '5000');
-        await page.click('#btn-start');
-
-        // Wait for it to draw and finish the cycle
-        await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
-
-        // Grab zoom level at 5000m
-        const zoom5000 = await page.evaluate(() => window.MapController.map.getZoom());
-
-        // Halt it again to change distance cleanly
-        try {
-            await page.click('#btn-stop', { timeout: 3000 });
-        } catch (e) {
-            // Button was already hidden or search auto-completed. That's fine.
-        }
-        await page.waitForSelector('#btn-start', { state: 'visible' });
-
-        // Change distance to zoom in
-        await page.fill('#distance', '1000');
-        await page.click('#btn-start');
-
-        // Verify it updates correctly
-        await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
-
-        // Grab zoom level at 1000m
-        const zoom1000 = await page.evaluate(() => window.MapController.map.getZoom());
-
-        // The app auto-shrinks to the closest car (400m limit due to 300m mock car).
-        // It should consistently land at the high-zoom tighter framing, and NEVER falsely pop out to 14.
-        expect(zoom5000).not.toBe(14);
-        expect(zoom1000).not.toBe(14);
-        expect(zoom5000).toBeGreaterThanOrEqual(15);
-        expect(zoom1000).toBeGreaterThanOrEqual(15);
-
-        // A visual check of the zoom would be ideal here but is hard via code without intercepting viewport
-        // This ensures the logic at least doesn't crash
-    });
 });
