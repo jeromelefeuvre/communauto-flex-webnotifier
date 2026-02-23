@@ -36,7 +36,7 @@ http://localhost:8000
 ### Option 2: Running via Docker (Recommended)
 This repository automatically builds and publishes its Docker container to the GitHub Container Registry (`ghcr.io`).
 
-1. Pull and run the latest pre-built container directly from GitHub:
+1. Pull and run the latest published container directly from GitHub:
 ```bash
 docker run -d -p 8000:8000 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-flex-webnotifier:latest
 ```
