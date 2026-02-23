@@ -47,7 +47,7 @@ docker run -d -p 8000:8000 -e BASE_URL=/flex --name communauto-notify ghcr.io/je
 
 2. Open your browser and navigate to `http://localhost:8000` (or your proxy URL).
 
-*(If you prefer to build the image manually yourself, use `docker build -t communauto-car-notify .`)*
+*(If you prefer to build the image manually yourself, use `docker build -t communauto-flex-webnotifier .`)*
 
 *(To stop the server later, simply run `docker stop communauto-notify`)*
 
