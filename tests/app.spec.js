@@ -14,7 +14,7 @@ test.describe('Communauto Car Notify end-to-end tests', () => {
 
     test('UI Loads correctly', async ({ page }) => {
         await expect(page).toHaveTitle(/Communauto/);
-        await expect(page.locator('h1')).toHaveText('Car Notify');
+        await expect(page.locator('h1')).toHaveText('Communauto Flex Car Notify');
         await expect(page.locator('#btn-geolocation')).toBeVisible();
         await expect(page.locator('#map')).toBeVisible();
     });
@@ -55,21 +55,27 @@ test.describe('Communauto Car Notify end-to-end tests', () => {
     });
 
     test('Verify Zoom Radius behavior', async ({ page }) => {
-        // Wait for auto-search to initialize its UI
+        // Reload the page and wait for the auto-search to kick in
+        await page.reload();
         await page.waitForSelector('#btn-stop', { state: 'visible' });
 
-        // Setup initial search
-        await page.fill('#distance', '5000');
+        // Halt the auto-search so we can deterministically test manual distance changes
         await page.click('#btn-stop');
+        await page.waitForSelector('#btn-start', { state: 'visible' });
+
+        // Setup initial manual search distance
+        await page.fill('#distance', '5000');
         await page.click('#btn-start');
 
-        // Wait for it to draw
+        // Wait for it to draw and finish the cycle
         await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
 
-        // Change distance and re-trigger
-        await page.fill('#distance', '1000');
-        await page.waitForSelector('#btn-stop', { state: 'visible' });
+        // Halt it again to change distance cleanly
         await page.click('#btn-stop');
+        await page.waitForSelector('#btn-start', { state: 'visible' });
+
+        // Change distance to zoom in
+        await page.fill('#distance', '1000');
         await page.click('#btn-start');
 
         // Verify it updates correctly
