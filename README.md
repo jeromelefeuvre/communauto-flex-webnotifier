@@ -66,3 +66,10 @@ npm test
 ```
 
 The test framework will invisibly launch a headless browser, start the local server, mock Montreal geolocation coordinates, interact with the map DOM elements, and verify the frontend logic is completely stable.
+
+---
+
+## 🙌 Acknowledgments
+
+The original idea and core concept for this project started with the excellent command-line tool built by Evert:
+[https://github.com/evert/communauto-car-notify](https://github.com/evert/communauto-car-notify)
