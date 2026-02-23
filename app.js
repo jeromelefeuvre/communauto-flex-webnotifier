@@ -79,6 +79,7 @@ const UIController = {
 };
 
 const AppState = {
+    isFirstInitEvent: true,
     isSearching: false,
     searchTimeout: null,
     currentDistanceRadius: 1500,
@@ -105,15 +106,12 @@ const MapController = {
             maxZoom: 20
         }).addTo(this.map);
 
-        this.updateCenter(lat, lng, true);
+        // Render circle but DO NOT fitBounds yet! DOM layout must calculate first.
+        this.updateCenter(lat, lng, false);
     },
 
     updateCenter: function (lat, lng, fitBounds = true) {
         if (!this.map) return;
-
-        if (fitBounds) {
-            this.map.setView([lat, lng], 14);
-        }
 
         if (this.userMarker) this.map.removeLayer(this.userMarker);
         this.userMarker = L.marker([lat, lng], {
@@ -214,6 +212,16 @@ if (window.Notification && Notification.permission !== "granted") {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Fetch and display the app version
+    fetch('api/version')
+        .then(res => res.json())
+        .then(data => {
+            if (data.version && data.version !== 'unknown' && data.version !== 'error') {
+                document.getElementById('app-version').textContent = 'v' + data.version;
+            }
+        })
+        .catch(() => console.warn("Could not fetch app version"));
+
     // If geolocation permission is already granted, auto-fetch the user's location
     if (navigator.permissions && navigator.geolocation) {
         navigator.permissions.query({ name: 'geolocation' }).then(result => {
@@ -221,6 +229,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 UIController.els.btnGeo.click();
             }
         });
+    }
+});
+
+UIController.els.distance.addEventListener('input', (e) => {
+    if (AppState.isSearching) return;
+    const newRadius = parseInt(e.target.value);
+    if (!isNaN(newRadius) && MapController.searchCircle && MapController.map) {
+        MapController.searchCircle.setRadius(newRadius);
     }
 });
 
@@ -274,12 +290,15 @@ UIController.els.form.addEventListener('submit', async (e) => {
 
     UIController.toggleSearching();
 
+    let shouldFitBounds = false;
+
     if (!MapController.map) {
         MapController.init(AppState.userLocation[0], AppState.userLocation[1]);
+        // Map is newly created, we definitely must fit bounds, but ONLY after invalidated.
+        shouldFitBounds = true;
     } else {
         // If it's a new location, always fit bounds.
-        // If it's the same location, only fit bounds if the current view doesn't fully show the search circle
-        let shouldFitBounds = !isSameLocation;
+        shouldFitBounds = !isSameLocation;
 
         if (isSameLocation && MapController.searchCircle) {
             // Temporarily update circle to get new bounds without drawing yet
@@ -287,24 +306,34 @@ UIController.els.form.addEventListener('submit', async (e) => {
             const circleBounds = MapController.searchCircle.getBounds();
             const mapBounds = MapController.map.getBounds();
 
-            // If we are zoomed IN (map bounds are smaller than and inside the circle bounds)
-            // we leave the zoom alone.
-            // If we are zoomed OUT (map shows more than the circle) or panned away,
-            // we want to fit bounds to perfectly frame the circle.
+            // Only fit bounds if we are zoomed OUT or panned away
             if (!circleBounds.contains(mapBounds)) {
                 shouldFitBounds = true;
             }
         }
 
-        MapController.updateCenter(AppState.userLocation[0], AppState.userLocation[1], shouldFitBounds);
+        MapController.updateCenter(AppState.userLocation[0], AppState.userLocation[1], false);
     }
-    setTimeout(() => MapController.map.invalidateSize(), 100);
 
-    AppController.searchLoop(city, delay);
+
+    const executeSearch = () => {
+        MapController.map.invalidateSize();
+        if (shouldFitBounds && MapController.searchCircle) {
+            MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
+        }
+        AppController.searchLoop(city, delay);
+    };
+
+    if (AppState.isFirstInitEvent) {
+        AppState.isFirstInitEvent = false;
+        setTimeout(executeSearch, 100);
+    } else {
+        executeSearch();
+    }
 });
 
 UIController.els.btnStop.addEventListener('click', () => {
-    stopSearch('Search stopped manually.');
+    stopSearch();
 });
 
 function stopSearch(message) {
@@ -333,6 +362,9 @@ const AppController = {
             if (!res.ok) throw new Error("Proxy server error");
 
             const json = await res.json();
+
+            // If the user stopped the search while this fetch was in-flight, discard the stale response safely.
+            if (!AppState.isSearching) return;
 
             const cars = json.d.Vehicles.map(vehicle => ({
                 brand: vehicle.CarBrand,
@@ -365,6 +397,8 @@ const AppController = {
 
                 if (nextSmallerRadius) {
                     AppState.currentDistanceRadius = nextSmallerRadius;
+                    UIController.els.distance.value = nextSmallerRadius; // Sync UI form with internal shrinking state
+
                     if (MapController.searchCircle) {
                         MapController.searchCircle.setRadius(AppState.currentDistanceRadius);
                         MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
@@ -408,33 +442,7 @@ const AppController = {
     }
 };
 
-function updateCarUIWithWalkingData(car, city, routeData) {
-    const walkDistanceStr = MathUtils.humanDistance(routeData.distance);
-    const walkMins = Math.round(routeData.duration / 60);
 
-    UIController.updateCarUIWithWalkingData(car, walkDistanceStr, walkMins);
-
-    // Update marker popup if it exists
-    const marker = carMarkers.find(m => m.getLatLng().lat === car.lat && m.getLatLng().lng === car.lng);
-    if (marker) {
-        marker.setPopupContent(`<b>${car.brand} ${car.model}</b><br>${walkDistanceStr} walk (${walkMins} min)<br>Plate: ${car.plate}`);
-    }
-}
-
-function sendDesktopNotification(car, city, nextSmallerRadius) {
-    if (!window.Notification || Notification.permission !== "granted") return;
-
-    const notification = new Notification("Communauto Found!", {
-        body: `${car.brand} ${car.model} is ${Math.floor(car.distance)}m away.` + (nextSmallerRadius ? ` Reducing search radius to ${humanDistance(nextSmallerRadius)}.` : ''),
-        icon: 'https://communauto.com/wp-content/uploads/2021/03/cropped-favicon-32x32.png',
-        requireInteraction: true
-    });
-
-    notification.onclick = () => {
-        window.open(`https://${branchIds[city] === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`, '_blank');
-        notification.close();
-    };
-}
 
 
 // Math Helpers
@@ -456,3 +464,8 @@ const MathUtils = {
         return (inp / 1000) + 'km';
     }
 };
+
+// Expose internal controllers to global window for E2E testing
+window.AppState = AppState;
+window.MapController = MapController;
+window.UIController = UIController;
