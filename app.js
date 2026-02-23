@@ -4,7 +4,9 @@ const branchIds = {
     toronto: 3,
 };
 
-const earthRadius = 6371; // In km
+function getBookingUrl(city) {
+    return `https://${branchIds[city] === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`;
+}
 
 // UI Controller
 const UIController = {
@@ -54,7 +56,7 @@ const UIController = {
     },
 
     showSuccessCar: function (car, city) {
-        const bookingUrl = `https://${branchIds[city] === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`;
+        const bookingUrl = getBookingUrl(city);
         this.els.resultsContainer.innerHTML = `
             <div class="car-card" id="success-car-card">
                 <div class="car-info">
@@ -201,11 +203,6 @@ const MapController = {
         this.lastRoutedCoord = null;
     }
 };
-
-// Ask for notification permission early
-if (window.Notification && Notification.permission !== "granted") {
-    Notification.requestPermission();
-}
 
 window.addEventListener('DOMContentLoaded', () => {
     // Fetch and display the app version
@@ -418,7 +415,7 @@ const AppController = {
         });
 
         notification.onclick = () => {
-            window.open(`https://${branchIds[city] === branchIds.toronto ? 'ontario' : 'quebec'}.client.reservauto.net/bookCar`, '_blank');
+            window.open(getBookingUrl(city), '_blank');
             notification.close();
         };
     }
@@ -429,12 +426,14 @@ const AppController = {
 
 // Math Helpers
 const MathUtils = {
+    earthRadius: 6371, // In km
+
     calculateDistance: function (lat1, lng1, lat2, lng2) {
         const dLat = this.toRadians(lat2 - lat1);
         const dLon = this.toRadians(lng2 - lng1);
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return earthRadius * c * 1000;
+        return this.earthRadius * c * 1000;
     },
 
     toRadians: function (degrees) {
