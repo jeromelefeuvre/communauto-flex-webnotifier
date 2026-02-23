@@ -34,20 +34,29 @@ const server = http.createServer((req, res) => {
         return res.end();
     }
 
+    // Support reverse proxies by stripping the configured base URL
+    const baseUrl = process.env.BASE_URL || '';
+    let requestUrl = req.url;
+
+    if (baseUrl && requestUrl.startsWith(baseUrl)) {
+        requestUrl = requestUrl.slice(baseUrl.length);
+        if (requestUrl === '') requestUrl = '/';
+    }
+
     // Route handling
-    if (req.url.startsWith('/api/cars')) {
-        return handleApiProxy(req, res);
+    if (requestUrl.startsWith('/api/cars')) {
+        return handleApiProxy(requestUrl, res);
     }
 
-    if (req.url.startsWith('/proxy-image')) {
-        return handleImageProxy(req, res);
+    if (requestUrl.startsWith('/proxy-image')) {
+        return handleImageProxy(requestUrl, res);
     }
 
-    return handleStaticFiles(req, res);
+    return handleStaticFiles(requestUrl, res);
 });
 
-function handleApiProxy(req, res) {
-    const targetUrl = new URL(req.url.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
+function handleApiProxy(requestUrl, res) {
+    const targetUrl = new URL(requestUrl.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
     console.log(`[API] Proxying request to: ${targetUrl.href}`);
 
     https.get(targetUrl, (proxyRes) => {
@@ -63,8 +72,8 @@ function handleApiProxy(req, res) {
     });
 }
 
-function handleImageProxy(req, res) {
-    const urlParams = new URLSearchParams(req.url.split('?')[1]);
+function handleImageProxy(requestUrl, res) {
+    const urlParams = new URLSearchParams(requestUrl.split('?')[1]);
     const imgUrl = urlParams.get('url');
 
     if (!imgUrl) {
@@ -88,8 +97,8 @@ function handleImageProxy(req, res) {
     });
 }
 
-function handleStaticFiles(req, res) {
-    let filePath = '.' + req.url;
+function handleStaticFiles(requestUrl, res) {
+    let filePath = '.' + requestUrl;
     if (filePath === './') filePath = './index.html';
 
     const extname = String(path.extname(filePath)).toLowerCase();

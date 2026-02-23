@@ -40,7 +40,12 @@ This repository automatically builds and publishes its Docker container to the G
 ```bash
 docker run -d -p 8000:8000 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-flex-webnotifier:latest
 ```
-2. Open your browser and navigate to `http://localhost:8000`.
+*(Optional: If you are hosting the app behind a reverse proxy in a sub-directory, pass the `BASE_URL` environment variable so the internal Node server routes static files correctly)*
+```bash
+docker run -d -p 8000:8000 -e BASE_URL=/flex1 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-flex-webnotifier:latest
+```
+
+2. Open your browser and navigate to `http://localhost:8000` (or your proxy URL).
 
 *(If you prefer to build the image manually yourself, use `docker build -t communauto-car-notify .`)*
 

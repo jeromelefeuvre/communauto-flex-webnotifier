@@ -146,7 +146,7 @@ const MapController = {
         this.carMarkers = [];
 
         const carIcon = L.icon({
-            iconUrl: '/proxy-image?url=' + encodeURIComponent('https://www.reservauto.net/images/GoogleMaps/pin-am.png'),
+            iconUrl: 'proxy-image?url=' + encodeURIComponent('https://www.reservauto.net/images/GoogleMaps/pin-am.png'),
             iconSize: [20, 27],
             iconAnchor: [18, 18],
             popupAnchor: [0, -18]
@@ -328,7 +328,7 @@ const AppController = {
             UIController.updateStatus(`Fetching cars for ${city}...`);
 
             // Fetch via local proxy to bypass CORS
-            const url = `/api/cars?BranchID=${branchId}&LanguageID=2`;
+            const url = `api/cars?BranchID=${branchId}&LanguageID=2`;
             const res = await fetch(url);
             if (!res.ok) throw new Error("Proxy server error");
 
