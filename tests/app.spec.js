@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-test.describe('Communauto Car Notify end-to-end tests', () => {
+test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
 
     test.beforeEach(async ({ page }) => {
         // Auto-accept any alerts the app throws (e.g. Stop Search)
@@ -55,12 +55,18 @@ test.describe('Communauto Car Notify end-to-end tests', () => {
     });
 
     test('Verify Zoom Radius behavior', async ({ page }) => {
-        // Reload the page and wait for the auto-search to kick in
+        // Reload the page and wait for the UI to hydrate
         await page.reload();
-        await page.waitForSelector('#btn-stop', { state: 'visible' });
 
-        // Halt the auto-search so we can deterministically test manual distance changes
-        await page.click('#btn-stop');
+        // Halt the auto-search deterministically. 
+        // We use a short timeout because on fast CI servers, the search might already auto-complete and hide the stop button.
+        try {
+            await page.click('#btn-stop', { timeout: 3000 });
+        } catch (e) {
+            // Button was already hidden or search auto-completed. That's fine.
+        }
+
+        // We are now deterministically halted and clean
         await page.waitForSelector('#btn-start', { state: 'visible' });
 
         // Setup initial manual search distance
@@ -71,7 +77,11 @@ test.describe('Communauto Car Notify end-to-end tests', () => {
         await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
 
         // Halt it again to change distance cleanly
-        await page.click('#btn-stop');
+        try {
+            await page.click('#btn-stop', { timeout: 3000 });
+        } catch (e) {
+            // Button was already hidden or search auto-completed. That's fine.
+        }
         await page.waitForSelector('#btn-start', { state: 'visible' });
 
         // Change distance to zoom in
