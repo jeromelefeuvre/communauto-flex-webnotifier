@@ -1,16 +1,49 @@
-name: Build and Publish Docker Image
+name: Communauto Flex WebNotifier CI/CD
 
 on:
   push:
-    branches: [ 'test' ]
+    branches: [ '**' ]
     tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ main, master ]
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  run-tests:
+    name: Run Playwright Tests
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        
+    - name: Install dependencies
+      run: npm install
+      
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+      
+    - name: Run Playwright tests
+      run: npm test
+      
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 14
+
   build-and-push-image:
+    name: Build & Publish Docker Image
+    needs: run-tests
+    # Only run this step if tests passed AND we are on the 'test' branch OR pushing a 'v*' tag
+    if: github.ref == 'refs/heads/test' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
