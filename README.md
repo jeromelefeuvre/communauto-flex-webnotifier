@@ -38,7 +38,7 @@ This repository automatically builds and publishes its Docker container to the G
 
 1. Pull and run the latest pre-built container directly from GitHub:
 ```bash
-docker run -d -p 8000:8000 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-car-notify:main
+docker run -d -p 8000:8000 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-flex-webnotifier:latest
 ```
 2. Open your browser and navigate to `http://localhost:8000`.
 

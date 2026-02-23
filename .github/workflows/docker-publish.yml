@@ -2,13 +2,7 @@ name: Build and Publish Docker Image
 
 on:
   push:
-    branches: ['main']
-    # Trigger on version tags as well
     tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: ['main']
-  # Enable manual triggering from the Actions tab
-  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -37,11 +31,14 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
