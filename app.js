@@ -178,7 +178,7 @@ const MapController = {
         this.lastRoutedCoord = coordString;
 
         try {
-            const url = `https://router.project-osrm.org/route/v1/foot/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+            const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
             const res = await fetch(url);
             const data = await res.json();
 
