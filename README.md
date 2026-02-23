@@ -34,17 +34,15 @@ http://localhost:8000
 ```
 
 ### Option 2: Running via Docker (Recommended)
-If you don't want to install Node.js locally, you can run the entire application completely containerized.
+This repository automatically builds and publishes its Docker container to the GitHub Container Registry (`ghcr.io`).
 
-1. Build the lightweight Docker image:
+1. Pull and run the latest pre-built container directly from GitHub:
 ```bash
-docker build -t communauto-car-notify .
+docker run -d -p 8000:8000 --name communauto-notify ghcr.io/jeromelefeuvre/communauto-car-notify:main
 ```
-2. Run the container:
-```bash
-docker run -d -p 8000:8000 --name communauto-notify communauto-car-notify
-```
-3. Open your browser and navigate to `http://localhost:8000`.
+2. Open your browser and navigate to `http://localhost:8000`.
+
+*(If you prefer to build the image manually yourself, use `docker build -t communauto-car-notify .`)*
 
 *(To stop the server later, simply run `docker stop communauto-notify`)*
 

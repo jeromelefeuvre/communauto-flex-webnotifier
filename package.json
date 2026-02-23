@@ -9,16 +9,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/evert/communauto-car-notify.git"
+    "url": "git+https://github.com/jeromelefeuvre/communauto-car-notify.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/evert/communauto-car-notify/issues"
+    "url": "https://github.com/jeromelefeuvre/communauto-car-notify/issues"
   },
-  "homepage": "https://github.com/evert/communauto-car-notify#readme",
+  "homepage": "https://github.com/jeromelefeuvre/communauto-car-notify#readme",
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "playwright": "^1.58.2"
