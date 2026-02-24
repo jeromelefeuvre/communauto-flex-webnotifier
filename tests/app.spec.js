@@ -57,7 +57,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex Car Notify');
         await expect(page.locator('#btn-geolocation')).toBeVisible();
-        await expect(page.locator('#map')).toBeHidden();
+        await expect(page.locator('#map')).toBeVisible();
     });
 
     test('Auto-geolocation on load works', async ({ page }) => {
