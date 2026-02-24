@@ -1,0 +1,13 @@
+# AI Assistant Instructions for Communauto Flex WebNotifier
+
+### 1. 🚨 NEVER PUSH TO GIT (CRITICAL)
+Under NO circumstances are you allowed to execute `git push` (to any branch or tag) or publish any code to a remote repository automatically. You may write code, run tests, and even `git commit` locally, but you **MUST explicitly ask the user for permission** to push before ever transmitting code to a remote server. Do not assume consent.
+
+### 2. 🧪 ALWAYS RUN TESTS BEFORE COMMITTING
+Always run the complete Playwright E2E suite (`npm test`) to validate functionality and layout assertions before staging or committing any code changes. Ensure all tests pass natively without skipping.
+
+### 3. 🛡️ CODE COVERAGE ARTIFACTS
+Provide coverage feedback primarily via terminal console summaries rather than generating heavy file-based V8 reports.
+
+### 4. ⚡ DYNAMIC CACHE BUSTING
+When modifying UI or CSS files, honor the automated Node.js version-injection cache busting system (`server.mjs`). Do not manually append static `?v=` query strings to imports in `index.html`. Ensure `package.json` version bumps organically trigger the cache invalidation so Docker clients reliably receive fresh CSS assets.
