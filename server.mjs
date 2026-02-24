@@ -148,12 +148,12 @@ function handleStaticFiles(requestUrl, res) {
                 } catch (e) { }
 
                 // Dynamically cache-bust main static assets based on package version
-                html = html.replace(/href="static\/style\.css"/g, `href="static/style.css?v=${version}"`);
-                html = html.replace(/src="config\.js"/g, `src="config.js?v=${version}"`);
-                html = html.replace(/src="utils\.js"/g, `src="utils.js?v=${version}"`);
-                html = html.replace(/src="ui\.js"/g, `src="ui.js?v=${version}"`);
-                html = html.replace(/src="map\.js"/g, `src="map.js?v=${version}"`);
-                html = html.replace(/src="app\.js"/g, `src="app.js?v=${version}"`);
+                html = html.replace(/href="static\/css\/style\.css"/g, `href="static/css/style.css?v=${version}"`);
+                html = html.replace(/src="static\/js\/config\.js"/g, `src="static/js/config.js?v=${version}"`);
+                html = html.replace(/src="static\/js\/utils\.js"/g, `src="static/js/utils.js?v=${version}"`);
+                html = html.replace(/src="static\/js\/ui\.js"/g, `src="static/js/ui.js?v=${version}"`);
+                html = html.replace(/src="static\/js\/map\.js"/g, `src="static/js/map.js?v=${version}"`);
+                html = html.replace(/src="static\/js\/app\.js"/g, `src="static/js/app.js?v=${version}"`);
 
                 return res.end(html);
             }
