@@ -5,7 +5,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy the server script and the frontend web files
-COPY server.mjs index.html style.css app.js ./
+COPY server.mjs index.html style.css app.js package.json ./
 
 # The server.mjs script runs on port 8000
 EXPOSE 8000
