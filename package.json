@@ -1,6 +1,6 @@
 {
   "name": "communauto-flex-webnotifier",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Look for close-by Communauto flex cars and get an alert ========================================================",
   "main": "app.js",
   "scripts": {
