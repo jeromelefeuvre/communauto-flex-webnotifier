@@ -35,41 +35,46 @@
 
             <main>
                 <form id="notify-form">
-                    <div class="form-group">
-                        <label for="city">City</label>
-                        <select id="city" name="city">
-                            <option value="montreal" selected>Montreal</option>
-                            <option value="quebec">Quebec</option>
-                            <option value="toronto">Toronto</option>
-                        </select>
-                    </div>
+                    <div id="form-inputs">
+                        <div class="form-group">
+                            <label for="city">City</label>
+                            <select id="city" name="city">
+                                <option value="montreal" selected>Montreal</option>
+                                <option value="quebec">Quebec</option>
+                                <option value="toronto">Toronto</option>
+                            </select>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="distance">Search Radius (meters)</label>
-                        <input type="number" id="distance" name="distance" value="600" min="100" max="10000" step="100">
-                    </div>
+                        <div class="form-group">
+                            <label for="distance">Search Radius (meters)</label>
+                            <input type="number" id="distance" name="distance" value="600" min="100" max="10000"
+                                step="100">
+                        </div>
 
-                    <div class="form-group">
-                        <label for="delay">Check Interval (seconds)</label>
-                        <input type="number" id="delay" name="delay" value="15" min="5" max="300">
-                    </div>
+                        <div class="form-group">
+                            <label for="delay">Check Interval (seconds)</label>
+                            <input type="number" id="delay" name="delay" value="15" min="5" max="300">
+                        </div>
 
-                    <div class="form-group">
-                        <label for="location">Location (Optional: lat,lng)</label>
-                        <div class="location-input-wrapper">
-                            <input type="text" id="location" name="location" placeholder="Leave empty for GPS">
-                            <button type="button" id="btn-geolocation" class="icon-btn" title="Use Current Location">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </button>
+                        <div class="form-group">
+                            <label for="location">Location (Optional: lat,lng)</label>
+                            <div class="location-input-wrapper">
+                                <input type="text" id="location" name="location" placeholder="Leave empty for GPS">
+                                <button type="button" id="btn-geolocation" class="icon-btn"
+                                    title="Use Current Location">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <button type="submit" id="btn-start" class="primary-btn">Start Searching</button>
                     <button type="button" id="btn-stop" class="danger-btn hidden">Stop Searching</button>
+                    <button type="button" id="btn-modify-search" class="secondary-btn hidden">Modify Search</button>
                 </form>
 
                 <div id="status-container" class="status-container hidden">

@@ -22,7 +22,9 @@ const UIController = {
         city: document.getElementById('city'),
         distance: document.getElementById('distance'),
         delay: document.getElementById('delay'),
-        mapWrapper: document.getElementById('map-wrapper')
+        mapWrapper: document.getElementById('map-wrapper'),
+        formInputs: document.getElementById('form-inputs'),
+        btnModifySearch: document.getElementById('btn-modify-search')
     },
 
     toggleSearching: function () {
@@ -55,24 +57,71 @@ const UIController = {
         this.els.statusText.innerText = text;
     },
 
-    showSuccessCar: function (car, city) {
+    showSuccessCars: function (cars, city) {
+        // Collapse the search inputs to save vertical screen space
+        this.els.formInputs.classList.add('hidden');
+        this.els.btnModifySearch.classList.remove('hidden');
+
         const bookingUrl = getBookingUrl(city);
-        this.els.resultsContainer.innerHTML = `
-            <div class="car-card" id="success-car-card">
-                <div class="car-info">
-                    <h3>${car.brand} ${car.model}</h3>
-                    <p id="car-card-desc">${Math.floor(car.distance)}m away (straight line) • Plate: ${car.plate} • ${car.color}</p>
+
+        let html = '';
+        cars.forEach((car, index) => {
+            html += `
+                <div class="car-card" data-plate="${car.plate}" data-lat="${car.lat}" data-lng="${car.lng}">
+                    <div class="car-info">
+                        <h3>${car.brand} ${car.model}</h3>
+                        <p id="desc-${car.plate}" class="car-card-desc">${Math.floor(car.distance)}m away (straight line) • Plate: ${car.plate} • ${car.color}</p>
+                    </div>
+                    <a href="${bookingUrl}" target="_blank" class="book-btn" onclick="event.stopPropagation()">Reserve</a>
                 </div>
-                <a href="${bookingUrl}" target="_blank" class="book-btn">Reserve</a>
-            </div>
-        `;
+            `;
+        });
+
+        this.els.resultsContainer.innerHTML = html;
+
+        // Attach click listeners to cards for map routing
+        const cards = this.els.resultsContainer.querySelectorAll('.car-card');
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove selected class from all
+                cards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                const lat = parseFloat(card.dataset.lat);
+                const lng = parseFloat(card.dataset.lng);
+                const plate = card.dataset.plate;
+
+                const car = cars.find(c => c.plate === plate);
+
+                MapController.drawRouteToCar(AppState.userLocation[0], AppState.userLocation[1], lat, lng).then(routeData => {
+                    if (routeData) {
+                        this.updateCarUIWithWalkingData(car, MathUtils.humanDistance(routeData.distance), Math.round(routeData.duration / 60));
+                    }
+                });
+
+                // Also open the popup on the map for the associated marker
+                const marker = MapController.carMarkers.find(m => m.options.plate === plate);
+                if (marker) {
+                    marker.openPopup();
+                }
+            });
+        });
     },
 
     updateCarUIWithWalkingData: function (car, walkDistanceStr, walkMins) {
-        const cardDesc = document.getElementById('car-card-desc');
+        const cardDesc = document.getElementById(`desc-${car.plate}`);
         if (cardDesc) {
             cardDesc.innerText = `${walkDistanceStr} walking (${walkMins} min) • Plate: ${car.plate} • ${car.color}`;
         }
+    },
+
+    expandForm: function () {
+        this.els.formInputs.classList.remove('hidden');
+        this.els.btnModifySearch.classList.add('hidden');
+        this.els.resultsContainer.innerHTML = ''; // Optionally clear results when modifying
+        MapController.clearRoutes(); // Optionally clear map routes when modifying
+        MapController.carMarkers.forEach(m => MapController.map.removeLayer(m));
+        MapController.carMarkers = [];
     }
 };
 
@@ -149,7 +198,7 @@ const MapController = {
         });
 
         filteredCars.forEach(car => {
-            const marker = L.marker([car.lat, car.lng], { icon: carIcon }).addTo(this.map);
+            const marker = L.marker([car.lat, car.lng], { icon: carIcon, plate: car.plate }).addTo(this.map);
             marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>${Math.floor(car.distance)}m away (straight line)<br>Plate: ${car.plate}`);
 
             marker.on('click', () => {
@@ -331,6 +380,10 @@ UIController.els.btnStop.addEventListener('click', () => {
     stopSearch();
 });
 
+UIController.els.btnModifySearch.addEventListener('click', () => {
+    UIController.expandForm();
+});
+
 function stopSearch(message) {
     AppState.isSearching = false;
     clearTimeout(AppState.searchTimeout);
@@ -384,12 +437,17 @@ const AppController = {
             UIController.updateStatus(`${cars.length} cars found. ${alertCars.length} within ${MathUtils.humanDistance(AppState.currentDistanceRadius)} (${mapCars.length} map total). Waiting...`);
 
             if (alertCars.length > 0) {
-                const car = alertCars[0];
+                const topCars = alertCars.slice(0, 3); // Take up to 3 cars
 
-                UIController.showSuccessCar(car, city);
-                this.sendDesktopNotification(car, city);
+                UIController.showSuccessCars(topCars, city);
+                this.sendDesktopNotification(topCars, city);
 
                 stopSearch();
+
+                // Automatically select the closest car (the first one) to draw the initial route
+                const firstCard = document.querySelector('.car-card');
+                if (firstCard) firstCard.click();
+
                 return;
             } else {
                 UIController.els.resultsContainer.innerHTML = ''; // Clear stale results
@@ -405,11 +463,17 @@ const AppController = {
         }
     },
 
-    sendDesktopNotification: function (car, city) {
+    sendDesktopNotification: function (cars, city) {
         if (!window.Notification || Notification.permission !== "granted") return;
 
-        const notification = new Notification("Communauto Found!", {
-            body: `${car.brand} ${car.model} is ${Math.floor(car.distance)}m away.`,
+        const primaryCar = cars[0];
+        const title = cars.length > 1 ? `Communauto Found ${cars.length} Cars!` : "Communauto Found!";
+        const body = cars.length > 1
+            ? `Closest: ${primaryCar.brand} ${primaryCar.model} (${Math.floor(primaryCar.distance)}m away)`
+            : `${primaryCar.brand} ${primaryCar.model} is ${Math.floor(primaryCar.distance)}m away.`;
+
+        const notification = new Notification(title, {
+            body: body,
             icon: 'https://communauto.com/wp-content/uploads/2021/03/cropped-favicon-32x32.png',
             requireInteraction: true
         });

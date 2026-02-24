@@ -228,6 +228,25 @@ button[type="submit"],
     background-color: var(--danger-hover);
 }
 
+.secondary-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 12px;
+}
+
+.secondary-btn:hover {
+    border-color: var(--text-secondary);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
 button:active {
     transform: scale(0.98);
 }
@@ -276,13 +295,26 @@ button:active {
 
 .car-card {
     background: var(--bg-color);
-    border: 1px solid var(--success-border);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     animation: slideIn 0.3s ease-out;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.car-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.car-card.selected {
+    border-color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 @keyframes slideIn {

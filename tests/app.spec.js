@@ -19,11 +19,27 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
                     Vehicles: [
                         {
                             CarBrand: "Mock",
-                            CarModel: "Close Car",
+                            CarModel: "Close Car 1",
                             CarPlate: "TEST 01",
                             CarColor: "Blue",
                             Latitude: 45.556000, // ~686m away (outside 600m limit, inside 800m map buffer)
                             Longitude: -73.652000
+                        },
+                        {
+                            CarBrand: "Mock",
+                            CarModel: "Close Car 2",
+                            CarPlate: "TEST 03",
+                            CarColor: "Silver",
+                            Latitude: 45.556100, // ~697m away
+                            Longitude: -73.652100
+                        },
+                        {
+                            CarBrand: "Mock",
+                            CarModel: "Close Car 3",
+                            CarPlate: "TEST 04",
+                            CarColor: "Black",
+                            Latitude: 45.556200, // ~708m away
+                            Longitude: -73.652200
                         },
                         {
                             CarBrand: "Mock",
@@ -137,15 +153,27 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Wait for the app to load and auto-search to start
         await expect(page.locator('#btn-stop')).toBeVisible();
         await page.click('#btn-stop');
-        await page.waitForSelector('#btn-start', { state: 'visible' });
+        await expect(page.locator('#btn-start')).toBeVisible();
+        await page.waitForTimeout(500); // Give app.js a tick to clear searchLoop timeouts
+
+        // Expand the UI form to assert the preserved values (or to change them)
+        // Note: btn-modify-search is only visible after a successful search, not after manual stop on fresh load.
+        // Wait, on fresh load, no cars are found yet, so form is not actually collapsed.
+
+        // Let's verify if the form is already expanded or we need to click.
+        // Since we just stopped the initial auto-search, the form should already be visible.
 
         // Change distance to 800m to include the car
         await page.fill('#distance', '800');
         await page.click('#btn-start');
 
-        // The mock API returns a car at ~686m away.
-        // It should find the car, show it, and stop searching, but NOT shrink the radius.
-        await expect(page.locator('#success-car-card')).toBeVisible({ timeout: 15000 });
+        // The mock API returns 3 cars at ~680-710m away.
+        // It should find the cars, show them all, and stop searching, but NOT shrink the radius.
+        await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
+
+        // Now cars are found, the form IS collapsed. We must click modify to read distance.
+        await expect(page.locator('#btn-modify-search')).toBeVisible();
+        await page.click('#btn-modify-search');
 
         // The visible value should remain 800
         const visibleValue = await page.evaluate(() => document.getElementById('distance').value);
@@ -159,6 +187,44 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
 
         // Ensure search has dynamically stopped (Start button is visible again)
         await expect(page.locator('#btn-start')).toBeVisible();
+    });
+    test('Clicking a car card updates the map route and selection state', async ({ page }) => {
+        // Wait for the app to load and auto-search to start
+        await expect(page.locator('#btn-stop')).toBeVisible();
+        await page.click('#btn-stop');
+        await expect(page.locator('#btn-start')).toBeVisible();
+        await page.waitForTimeout(500); // Give app.js a tick to clear searchLoop timeouts
+
+        // Change distance to 800m to include the cars
+        await page.fill('#distance', '800');
+        await page.click('#btn-start');
+
+        // Wait for cars to render
+        await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
+
+        const firstCar = page.locator('.car-card').nth(0);
+        const secondCar = page.locator('.car-card').nth(1);
+
+        // Verify initial selection state (first car is auto-selected)
+        await expect(firstCar).toHaveClass(/selected/);
+        await expect(secondCar).not.toHaveClass(/selected/);
+
+        // Record the initial routed coordinate
+        const initialRoutedCoord = await page.evaluate(() => window.MapController.lastRoutedCoord);
+        expect(initialRoutedCoord).toBe('45.556,-73.652'); // Latitude: 45.556000, Longitude: -73.652000
+
+        // Click the second car
+        await secondCar.click();
+
+        // Verify the selection state moved
+        await expect(firstCar).not.toHaveClass(/selected/);
+        await expect(secondCar).toHaveClass(/selected/);
+
+        // Verify that the route was drawn to the new car's coordinates
+        await expect(async () => {
+            const activeRouteCoords = await page.evaluate(() => window.MapController.lastRoutedCoord);
+            expect(activeRouteCoords).toBe('45.5561,-73.6521'); // Latitude: 45.556100, Longitude: -73.652100
+        }).toPass({ timeout: 5000 });
     });
 
 });
