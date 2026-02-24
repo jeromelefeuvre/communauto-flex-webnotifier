@@ -11,3 +11,6 @@ Provide coverage feedback primarily via terminal console summaries rather than g
 
 ### 4. ⚡ DYNAMIC CACHE BUSTING
 When modifying UI or CSS files, honor the automated Node.js version-injection cache busting system (`server.mjs`). Do not manually append static `?v=` query strings to imports in `index.html`. Ensure `package.json` version bumps organically trigger the cache invalidation so Docker clients reliably receive fresh CSS assets.
+
+### 5. 🏷️ GIT TAG CONVENTIONS
+When creating release tags (e.g. `v1.3.0`), always use the established multi-line message format starting with `Release vX.Y.Z Summary:` followed by hyphenated commit-style bullet points detailing the changes (e.g., `- feat:`, `- fix:`, `- chore:`). Do not use single-sentence or abbreviated unformatted messages for release tags.
