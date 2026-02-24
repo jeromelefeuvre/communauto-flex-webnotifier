@@ -5,11 +5,12 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy the server script and the frontend web files
-COPY server.mjs package.json ./
+COPY package.json ./
+COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
 # The server.mjs script runs on port 8000
 EXPOSE 8000
 
 # Start the lightweight Node proxy server
-CMD ["node", "server.mjs"]
+CMD ["node", "backend/server.mjs"]

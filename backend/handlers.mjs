@@ -1,11 +1,9 @@
 import http from 'http';
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 
-const PORT = 8000;
-
-const mimeTypes = {
+export const mimeTypes = {
     '.html': 'text/html',
     '.js': 'text/javascript',
     '.css': 'text/css',
@@ -23,43 +21,7 @@ const mimeTypes = {
     '.wasm': 'application/wasm'
 };
 
-const server = http.createServer((req, res) => {
-    // Enable CORS for all routes (just in case)
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
-    res.setHeader('Access-Control-Allow-Headers', '*');
-
-    if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        return res.end();
-    }
-
-    // Support reverse proxies by stripping the configured base URL
-    const baseUrl = process.env.BASE_URL || '';
-    let requestUrl = req.url;
-
-    if (baseUrl && requestUrl.startsWith(baseUrl)) {
-        requestUrl = requestUrl.slice(baseUrl.length);
-        if (requestUrl === '') requestUrl = '/';
-    }
-
-    // Route handling
-    if (requestUrl.startsWith('/api/cars')) {
-        return handleApiProxy(requestUrl, res);
-    }
-
-    if (requestUrl.startsWith('/api/version')) {
-        return handleVersionProxy(res);
-    }
-
-    if (requestUrl.startsWith('/proxy-image')) {
-        return handleImageProxy(requestUrl, res);
-    }
-
-    return handleStaticFiles(requestUrl, res);
-});
-
-function handleApiProxy(requestUrl, res) {
+export function handleApiProxy(requestUrl, res) {
     const targetUrl = new URL(requestUrl.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
     console.log(`[API] Proxying request to: ${targetUrl.href}`);
 
@@ -76,7 +38,7 @@ function handleApiProxy(requestUrl, res) {
     });
 }
 
-function handleVersionProxy(res) {
+export function handleVersionProxy(res) {
     fs.readFile('./package.json', 'utf8', (err, data) => {
         if (err) {
             console.error('[API] Version Error:', err);
@@ -94,7 +56,7 @@ function handleVersionProxy(res) {
     });
 }
 
-function handleImageProxy(requestUrl, res) {
+export function handleImageProxy(requestUrl, res) {
     const urlParams = new URLSearchParams(requestUrl.split('?')[1]);
     const imgUrl = urlParams.get('url');
 
@@ -119,7 +81,7 @@ function handleImageProxy(requestUrl, res) {
     });
 }
 
-function handleStaticFiles(requestUrl, res) {
+export function handleStaticFiles(requestUrl, res) {
     requestUrl = requestUrl.split('?')[0];
     let filePath = './frontend' + requestUrl;
     if (filePath === './frontend/') filePath = './frontend/index.html';
@@ -162,7 +124,3 @@ function handleStaticFiles(requestUrl, res) {
         }
     });
 }
-
-server.listen(PORT, () => {
-    console.log(`[🚀] Car Notify Web App running at http://localhost:${PORT}`);
-});

@@ -28,7 +28,7 @@ module.exports = defineConfig({
         }
     ],
     webServer: {
-        command: 'node server.mjs',
+        command: 'node backend/server.mjs',
         url: 'http://localhost:8000',
         reuseExistingServer: !process.env.CI,
     },

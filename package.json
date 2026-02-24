@@ -4,6 +4,7 @@
   "description": "Look for close-by Communauto flex cars and get an alert ========================================================",
   "main": "app.js",
   "scripts": {
+    "start": "node backend/server.mjs",
     "test": "playwright test",
     "postinstall": "playwright install chromium"
   },

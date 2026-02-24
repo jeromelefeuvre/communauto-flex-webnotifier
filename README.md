@@ -23,10 +23,13 @@ You can run this application either directly via Node.js or via Docker.
 ### Option 1: Running Locally (Node.js)
 *Requires Node.js > 17.5*
 
-1. Clone the repository and navigate into the directory.
+1. Clone the repository, navigate into the directory, and install dependencies:
+```bash
+npm install
+```
 2. Start the local server proxy:
 ```bash
-node server.mjs
+npm start
 ```
 3. Open your browser and navigate to:
 ```text
