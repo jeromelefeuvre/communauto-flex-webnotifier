@@ -1,8 +1,14 @@
 const { test, expect } = require('@playwright/test');
+const { addCoverageReport } = require('monocart-reporter');
 
 test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
 
     test.beforeEach(async ({ page }) => {
+        // Start collecting V8 Code Coverage
+        await page.coverage.startJSCoverage({
+            resetOnNavigation: false
+        });
+
         // Auto-accept any alerts the app throws (e.g. Stop Search)
         page.on('dialog', dialog => dialog.accept());
         page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
@@ -40,6 +46,12 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await page.context().grantPermissions(['geolocation']);
         await page.context().setGeolocation({ latitude: 45.549831, longitude: -73.652279 });
         await page.goto('http://localhost:8000');
+    });
+
+    test.afterEach(async ({ page }, testInfo) => {
+        // Collect V8 Code Coverage and attach for monocart-reporter
+        const coverage = await page.coverage.stopJSCoverage();
+        await addCoverageReport(coverage, testInfo);
     });
 
     test('UI Loads correctly', async ({ page }) => {

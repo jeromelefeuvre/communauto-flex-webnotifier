@@ -5,7 +5,17 @@ module.exports = defineConfig({
     fullyParallel: true,
     retries: 0,
     workers: 1,
-    reporter: 'html',
+    reporter: [
+        ['list'],
+        ['monocart-reporter', {
+            name: "My Test Coverage Report",
+            outputFile: './test-results/report.html',
+            coverage: {
+                sourceFilter: (sourcePath) => sourcePath.includes('app.js'),
+                reports: ['console-summary']
+            }
+        }]
+    ],
     use: {
         baseURL: 'http://localhost:8000',
         trace: 'on-first-retry',
