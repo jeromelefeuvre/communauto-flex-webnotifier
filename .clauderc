@@ -14,3 +14,6 @@ When modifying UI or CSS files, honor the automated Node.js version-injection ca
 
 ### 5. 🏷️ GIT TAG CONVENTIONS
 When creating release tags (e.g. `v1.3.0`), always use the established multi-line message format starting with `Release vX.Y.Z Summary:` followed by hyphenated commit-style bullet points detailing the changes (e.g., `- feat:`, `- fix:`, `- chore:`). Do not use single-sentence or abbreviated unformatted messages for release tags.
+
+### 6. 🐳 DOCKER PRODUCTION VALIDATION
+After all E2E Playwright tests pass cleanly locally, you must rigorously validate that the application is fully ready for production deployment by running `docker build -t communauto-car-notify .`. Do not commit code until the Docker container safely compiles without build errors.

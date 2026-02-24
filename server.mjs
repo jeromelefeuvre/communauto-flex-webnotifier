@@ -121,8 +121,8 @@ function handleImageProxy(requestUrl, res) {
 
 function handleStaticFiles(requestUrl, res) {
     requestUrl = requestUrl.split('?')[0];
-    let filePath = '.' + requestUrl;
-    if (filePath === './') filePath = './index.html';
+    let filePath = './frontend' + requestUrl;
+    if (filePath === './frontend/') filePath = './frontend/index.html';
 
     const extname = String(path.extname(filePath)).toLowerCase();
     const contentType = mimeTypes[extname] || 'application/octet-stream';
@@ -139,7 +139,7 @@ function handleStaticFiles(requestUrl, res) {
         } else {
             res.writeHead(200, { 'Content-Type': contentType });
 
-            if (filePath === './index.html') {
+            if (filePath === './frontend/index.html') {
                 let html = content.toString('utf-8');
                 let version = 'unknown';
                 try {
@@ -148,7 +148,11 @@ function handleStaticFiles(requestUrl, res) {
                 } catch (e) { }
 
                 // Dynamically cache-bust main static assets based on package version
-                html = html.replace(/href="style\.css"/g, `href="style.css?v=${version}"`);
+                html = html.replace(/href="static\/style\.css"/g, `href="static/style.css?v=${version}"`);
+                html = html.replace(/src="config\.js"/g, `src="config.js?v=${version}"`);
+                html = html.replace(/src="utils\.js"/g, `src="utils.js?v=${version}"`);
+                html = html.replace(/src="ui\.js"/g, `src="ui.js?v=${version}"`);
+                html = html.replace(/src="map\.js"/g, `src="map.js?v=${version}"`);
                 html = html.replace(/src="app\.js"/g, `src="app.js?v=${version}"`);
 
                 return res.end(html);

@@ -1,7 +1,5 @@
 node_modules/
-playwright-report/
-test-results/
-monocart-report/
+report/
 .env
 .DS_Store
 .gemini/

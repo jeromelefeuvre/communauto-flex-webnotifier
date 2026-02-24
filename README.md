@@ -3,7 +3,7 @@
 Sick of refreshing the app or the web app for a close-by car? 
 This application tracks nearby Communauto flex cars on a loop, plots them on an interactive map, dynamically routes your walking distance, and pops up a desktop notification when it finds a car that matches your criteria!
 
-![Web App Screenshot](image/screenshot1.png)
+![Web App Screenshot](frontend/static/images/screenshot1.png)
 
 ---
 

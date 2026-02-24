@@ -2,6 +2,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
     testDir: './tests',
+    outputDir: './report/test-results',
     fullyParallel: true,
     retries: 0,
     workers: 1,
@@ -9,7 +10,7 @@ module.exports = defineConfig({
         ['list'],
         ['monocart-reporter', {
             name: "My Test Coverage Report",
-            outputFile: './test-results/report.html',
+            outputFile: './report/report.html',
             coverage: {
                 sourceFilter: (sourcePath) => sourcePath.includes('app.js'),
                 reports: ['console-summary']
