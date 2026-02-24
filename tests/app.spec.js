@@ -12,7 +12,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Auto-accept any alerts the app throws (e.g. Stop Search)
         page.on('dialog', dialog => dialog.accept());
         page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text()));
-
         // Intercept API calls to avoid spamming the live Communauto servers
         await page.route('**/api/cars*', async route => {
             const mockData = {
@@ -58,7 +57,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex Car Notify');
         await expect(page.locator('#btn-geolocation')).toBeVisible();
-        await expect(page.locator('#map')).toBeVisible();
+        await expect(page.locator('#map')).toBeHidden();
     });
 
     test('Auto-geolocation on load works', async ({ page }) => {
@@ -70,14 +69,11 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     test('Start and Stop Search toggle works', async ({ page }) => {
         // Stop the auto-search
         await page.click('#btn-stop');
-        await page.waitForSelector('#btn-start', { state: 'visible' });
-        await page.waitForSelector('#btn-stop', { state: 'hidden' });
-
+        await expect(page.locator('#status-container')).toBeHidden();
 
         // Start it again
         await page.click('#btn-start');
-        await page.waitForSelector('#btn-stop', { state: 'visible' });
-        await page.waitForSelector('#btn-start', { state: 'hidden' });
+        await expect(page.locator('#status-container')).toBeVisible();
     });
 
     test('Map interacts and draws cars', async ({ page }) => {

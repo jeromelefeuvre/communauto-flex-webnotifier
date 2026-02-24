@@ -120,6 +120,7 @@ function handleImageProxy(requestUrl, res) {
 }
 
 function handleStaticFiles(requestUrl, res) {
+    requestUrl = requestUrl.split('?')[0];
     let filePath = '.' + requestUrl;
     if (filePath === './') filePath = './index.html';
 
@@ -137,6 +138,22 @@ function handleStaticFiles(requestUrl, res) {
             }
         } else {
             res.writeHead(200, { 'Content-Type': contentType });
+
+            if (filePath === './index.html') {
+                let html = content.toString('utf-8');
+                let version = 'unknown';
+                try {
+                    const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+                    version = pkg.version;
+                } catch (e) { }
+
+                // Dynamically cache-bust main static assets based on package version
+                html = html.replace(/href="style\.css"/g, `href="style.css?v=${version}"`);
+                html = html.replace(/src="app\.js"/g, `src="app.js?v=${version}"`);
+
+                return res.end(html);
+            }
+
             res.end(content, 'utf-8');
         }
     });
