@@ -72,13 +72,17 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     test('UI Loads correctly', async ({ page }) => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex WebNotify');
+        // Map wrapper is only visible after a search is initiated
+        await expect(page.locator('#map-wrapper')).toBeVisible({ timeout: 10000 });
         await expect(page.locator('#map')).toBeVisible();
     });
 
     test('Auto-geolocation on load works', async ({ page }) => {
-        // Because permissions are granted in beforeEach, it should auto-fetch and start
-        await expect(page.locator('#location')).toHaveValue('45.549831,-73.652279');
-        await expect(page.locator('#btn-stop')).toBeVisible();
+        // Because permissions are granted in beforeEach, LocationController auto-fetches
+        // and writes coordinates to the hidden #location field.
+        await expect(page.locator('#btn-stop')).toBeVisible({ timeout: 10000 });
+        const locValue = await page.evaluate(() => document.getElementById('location').value);
+        expect(locValue).toBe('45.549831,-73.652279');
     });
 
     test('Start and Stop Search toggle works', async ({ page }) => {

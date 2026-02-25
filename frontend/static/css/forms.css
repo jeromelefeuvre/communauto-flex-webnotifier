@@ -127,9 +127,117 @@ input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.2);
 }
 
-.location-input-wrapper {
+.location-group {
     display: flex;
+    flex-direction: column;
     gap: 8px;
+    min-width: 160px;
+}
+
+.location-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+/* GPS pill button */
+.geo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.geo-btn:hover {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+/* Blue: GPS location successfully found */
+.geo-btn.geo-success {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* Red: GPS not available, manual input needed */
+.geo-btn.geo-error {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+/* Address autocomplete field */
+.address-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.address-input-wrapper input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.address-input-wrapper input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Dropdown suggestions */
+.address-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.address-suggestions li {
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s;
+    line-height: 1.3;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.address-suggestions li:last-child {
+    border-bottom: none;
+}
+
+.address-suggestions li:hover,
+.address-suggestions li.active {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--accent-color);
 }
 
 .form-actions {

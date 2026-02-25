@@ -8,11 +8,13 @@ This application tracks nearby Communauto flex cars on a loop, plots them on an 
 ---
 
 ## 🚀 Features
-* **Modern Web Interface**: Clean, responsive, dark-mode styling.
+* **Smart Location Widget**: A color-coded GPS button — 🔵 blue when your location is found, 🔴 red when GPS is unavailable. If GPS fails, an address autocomplete field appears and uses [Nominatim](https://nominatim.openstreetmap.org/) to geocode your address with no API key required.
+* **Google Maps-style Layout**: Results panel sits side-by-side with the interactive map at full equal height, just like Google Maps search results.
 * **Interactive Leaflet Map**: Visually tracks your location, your search radius bounds, and real-time car pins.
-* **Smart Routing**: Click any car pin to instantly draw a walking route and calculate the exact travel time using OSRM data.
-* **Auto-Geolocation**: Grants browser permission once, and the app will instantly boot up and auto-search your GPS coordinates on every load.
+* **Smart Routing**: Click any car card to instantly draw a walking route and display the exact distance and travel time using OSRM data.
+* **Auto-Geolocation**: Grants browser permission once; the app automatically boots and starts searching your GPS coordinates on every load.
 * **Background Notifications**: Get native OS desktop alerts the moment a vehicle is found.
+* **Responsive Design**: Adapts to mobile screens — the results panel collapses above the map on small viewports.
 
 ---
 

@@ -15,7 +15,7 @@ const MathUtils = {
     },
 
     humanDistance: function (inp) {
-        if (inp < 1000) return inp + 'm';
-        return (inp / 1000) + 'km';
+        if (inp < 1000) return Math.round(inp) + 'm';
+        return (inp / 1000).toFixed(1) + 'km';
     }
 };

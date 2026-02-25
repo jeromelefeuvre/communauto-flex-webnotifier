@@ -18,14 +18,8 @@ window.addEventListener('DOMContentLoaded', () => {
         })
         .catch(() => console.warn("Could not fetch app version"));
 
-    // If geolocation permission is already granted, auto-fetch the user's location
-    if (navigator.permissions && navigator.geolocation) {
-        navigator.permissions.query({ name: 'geolocation' }).then(result => {
-            if (result.state === 'granted') {
-                UIController.els.btnGeo.click();
-            }
-        });
-    }
+    // Initialize the smart location controller (GPS probe + autocomplete wiring)
+    LocationController.init();
 });
 
 UIController.els.distance.addEventListener('input', (e) => {
@@ -45,21 +39,19 @@ UIController.els.distance.addEventListener('input', (e) => {
 });
 
 UIController.els.btnGeo.addEventListener('click', async () => {
+    if (UIController.els.btnGeo.disabled) return;
     UIController.els.btnGeo.disabled = true;
+    LocationController.setLoading();
     try {
         const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
+            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
         });
-        const lat = position.coords.latitude.toFixed(6);
-        const lng = position.coords.longitude.toFixed(6);
-
-        UIController.els.locationInput.value = `${lat},${lng}`;
-        AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
-
-        // Automatically start the search once the location is successfully found
+        LocationController.onGpsSuccess(position);
+        // If location was found via button click, auto-start search
+        AppState.userLocation = [parseFloat(position.coords.latitude.toFixed(6)), parseFloat(position.coords.longitude.toFixed(6))];
         UIController.els.btnStart.click();
-    } catch (err) {
-        alert("Could not get location. Ensure your browser has location permissions enabled for this site, or type it manually (lat,lng).");
+    } catch {
+        LocationController.onGpsError();
     } finally {
         UIController.els.btnGeo.disabled = false;
     }
@@ -69,21 +61,25 @@ UIController.els.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (AppState.isSearching) return;
 
-    // Permissions check
-    if (window.Notification && Notification.permission !== "granted") {
-        await Notification.requestPermission();
+    // Request notification permission if not yet decided.
+    // Don't await — the promise may never resolve when called outside a user gesture (e.g., GPS auto-start).
+    if (window.Notification && Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => { });
     }
 
     const city = UIController.els.city.value;
     const initialDistance = parseInt(UIController.els.distance.value);
     const delay = parseInt(UIController.els.delay.value) * 1000;
-    const locString = UIController.els.locationInput.value;
-
-    if (locString) {
-        AppState.userLocation = locString.split(',').map(c => parseFloat(c.trim()));
-    } else {
-        alert("Please provide a location or use the GPS button.");
-        return;
+    // AppState.userLocation is set by LocationController (via GPS or address selection).
+    // Fall back to parsing the hidden location field if AppState hasn't been set yet.
+    if (!AppState.userLocation) {
+        const locString = UIController.els.locationInput.value;
+        if (locString) {
+            AppState.userLocation = locString.split(',').map(c => parseFloat(c.trim()));
+        } else {
+            alert("Please allow GPS access or enter an address to get started.");
+            return;
+        }
     }
 
     const isSameLocation = AppState.lastSearchLocation && AppState.lastSearchLocation[0] === AppState.userLocation[0] && AppState.lastSearchLocation[1] === AppState.userLocation[1];
