@@ -14,13 +14,20 @@ const UIController = {
         delay: document.getElementById('delay'),
         mapWrapper: document.getElementById('map-wrapper'),
         formInputs: document.getElementById('form-inputs'),
-        btnModifySearch: document.getElementById('btn-modify-search')
+        floatingSearchBar: document.getElementById('floating-search-bar'),
+        floatingSearchText: document.getElementById('floating-search-text'),
+        distanceValue: document.getElementById('distance-value')
     },
 
     toggleSearching: function () {
         this.els.btnStart.classList.add('hidden');
         this.els.btnStop.classList.remove('hidden');
         this.els.statusContainer.classList.remove('hidden');
+
+        // Collapse the form immediately upon search start to embrace minimalist interface
+        this.els.formInputs.classList.add('hidden');
+        this.els.floatingSearchBar.classList.remove('hidden');
+
         this.els.resultsContainer.innerHTML = '';
         this.els.mapWrapper.classList.remove('hidden');
 
@@ -50,7 +57,7 @@ const UIController = {
     showSuccessCars: function (cars, city) {
         // Collapse the search inputs to save vertical screen space
         this.els.formInputs.classList.add('hidden');
-        this.els.btnModifySearch.classList.remove('hidden');
+        this.els.floatingSearchBar.classList.remove('hidden');
 
         const bookingUrl = getBookingUrl(city);
 
@@ -105,9 +112,14 @@ const UIController = {
         }
     },
 
+    updateFilterText: function (city, radius) {
+        const cityCap = city.charAt(0).toUpperCase() + city.slice(1);
+        this.els.floatingSearchText.innerText = `${cityCap} - ${radius}m`;
+    },
+
     expandForm: function () {
         this.els.formInputs.classList.remove('hidden');
-        this.els.btnModifySearch.classList.add('hidden');
+        this.els.floatingSearchBar.classList.add('hidden');
         this.els.resultsContainer.innerHTML = ''; // Optionally clear results when modifying
         MapController.clearRoutes(); // Optionally clear map routes when modifying
         MapController.carMarkers.forEach(m => MapController.map.removeLayer(m));

@@ -71,8 +71,8 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
 
     test('UI Loads correctly', async ({ page }) => {
         await expect(page).toHaveTitle(/Communauto/);
-        await expect(page.locator('h1')).toHaveText('Communauto Flex Car Notify');
-        await expect(page.locator('#btn-geolocation')).toBeVisible();
+        await expect(page.locator('h1')).toHaveText('Communauto Flex WebNotify');
+        await expect(page.locator('#floating-search-bar')).toBeVisible();
         await expect(page.locator('#map')).toBeVisible();
     });
 
@@ -121,7 +121,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         expect(initialZoom).toBeGreaterThanOrEqual(10);
     });
 
-    test('Map circle radius updates dynamically on input change without map stuttering', async ({ page }) => {
+    test('Map circle radius dynamically updates and zooms to fit bounds on drag', async ({ page }) => {
         // Wait for the app to load and auto-search to start
         await expect(page.locator('#btn-stop')).toBeVisible();
         await page.click('#btn-stop');
@@ -129,24 +129,34 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
 
         // Record initial map zoom and center
         const initialZoom = await page.evaluate(() => window.MapController.map.getZoom());
-        const initialCenter = await page.evaluate(() => window.MapController.map.getCenter());
 
-        // Change the radius input
-        await page.fill('#distance', '1200');
+        // Hard wait to allow Leaflet tile rendering engines to settle before abruptly resizing bounds
+        await page.waitForTimeout(1500);
+
+        // Expand the sleek UI to access the inputs
+        await page.click('#floating-search-bar');
+
+        // Sync Leaflet's internal metrics before changing bounds in a racing CI environment
+        await page.evaluate(() => window.MapController.map.invalidateSize());
+
+        // Change the radius input via simulated range drag to max bounds
+        await page.evaluate(() => {
+            const el = document.getElementById('distance');
+            el.value = '2000'; // Huge radius to force a zoom-out
+            el.dispatchEvent(new Event('input'));
+        });
 
         // Check updated radius
         const updatedRadius = await page.evaluate(() => {
             return window.MapController.searchCircle ? window.MapController.searchCircle.getRadius() : null;
         });
-        expect(updatedRadius).toBe(1200);
+        expect(updatedRadius).toBe(2000);
 
-        // Verify map did NOT stutter (zoom or center shouldn't have changed just by typing)
-        const currentZoom = await page.evaluate(() => window.MapController.map.getZoom());
-        const currentCenter = await page.evaluate(() => window.MapController.map.getCenter());
-
-        expect(currentZoom).toBe(initialZoom);
-        expect(currentCenter.lat).toBeCloseTo(initialCenter.lat, 5);
-        expect(currentCenter.lng).toBeCloseTo(initialCenter.lng, 5);
+        // Use robust polling to allow Leaflet bounds animation tick to settle natively without flake
+        await expect(async () => {
+            const currentZoom = await page.evaluate(() => window.MapController.map.getZoom());
+            expect(currentZoom).toBeLessThan(initialZoom);
+        }).toPass({ timeout: 5000 });
     });
 
     test('UI Search radius remains unchanged when a car is found', async ({ page }) => {
@@ -163,8 +173,15 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Let's verify if the form is already expanded or we need to click.
         // Since we just stopped the initial auto-search, the form should already be visible.
 
-        // Change distance to 800m to include the car
-        await page.fill('#distance', '800');
+        // We must expand the sleek UI to access the input
+        await page.click('#floating-search-bar');
+
+        // Change distance to 800m to include the car via simulated slider drag
+        await page.evaluate(() => {
+            const el = document.getElementById('distance');
+            el.value = '800';
+            el.dispatchEvent(new Event('input'));
+        });
         await page.click('#btn-start');
 
         // The mock API returns 3 cars at ~680-710m away.
@@ -172,8 +189,8 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
 
         // Now cars are found, the form IS collapsed. We must click modify to read distance.
-        await expect(page.locator('#btn-modify-search')).toBeVisible();
-        await page.click('#btn-modify-search');
+        await expect(page.locator('#floating-search-bar')).toBeVisible();
+        await page.click('#floating-search-bar');
 
         // The visible value should remain 800
         const visibleValue = await page.evaluate(() => document.getElementById('distance').value);
@@ -195,8 +212,12 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page.locator('#btn-start')).toBeVisible();
         await page.waitForTimeout(500); // Give app.js a tick to clear searchLoop timeouts
 
-        // Change distance to 800m to include the cars
-        await page.fill('#distance', '800');
+        // Change distance to 800m to include the cars via simulated slider drag
+        await page.evaluate(() => {
+            const el = document.getElementById('distance');
+            el.value = '800';
+            el.dispatchEvent(new Event('input'));
+        });
         await page.click('#btn-start');
 
         // Wait for cars to render

@@ -29,10 +29,18 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 UIController.els.distance.addEventListener('input', (e) => {
-    if (AppState.isSearching) return;
     const newRadius = parseInt(e.target.value);
+
+    // Always update the visual text UI instantly when slider drags
+    if (UIController.els.distanceValue) {
+        UIController.els.distanceValue.innerText = newRadius + 'm';
+    }
+
+    if (AppState.isSearching) return;
     if (!isNaN(newRadius) && MapController.searchCircle && MapController.map) {
         MapController.searchCircle.setRadius(newRadius);
+        // Automatically zoom the map to gracefully fit the newly sized circle bounds
+        MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
     }
 });
 
@@ -84,6 +92,7 @@ UIController.els.form.addEventListener('submit', async (e) => {
     AppState.currentDistanceRadius = initialDistance;
     AppState.isSearching = true;
 
+    UIController.updateFilterText(city, initialDistance);
     UIController.toggleSearching();
 
     let shouldFitBounds = false;
@@ -134,7 +143,7 @@ UIController.els.btnStop.addEventListener('click', () => {
     stopSearch();
 });
 
-UIController.els.btnModifySearch.addEventListener('click', () => {
+UIController.els.floatingSearchBar.addEventListener('click', () => {
     UIController.expandForm();
 });
 
