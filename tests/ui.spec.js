@@ -89,5 +89,44 @@ test.describe('UI Responsive Regression Tests', () => {
             const stopBox = await page.locator('#btn-stop').boundingBox();
             expect(stopBox).not.toBeNull();
         });
+
+        test('Results panel sits side-by-side with map at equal height', async ({ page }) => {
+            // Override the empty mock with a single car that is within the 600m radius
+            await page.route('**/api/cars*', async route => {
+                await route.fulfill({
+                    json: {
+                        d: {
+                            Vehicles: [{
+                                CarBrand: 'Toyota', CarModel: 'Corolla', CarPlate: 'TST001',
+                                CarColor: 'white', Latitude: 45.5020, Longitude: -73.5680
+                            }]
+                        }
+                    }
+                });
+            });
+
+            await page.fill('#location', '45.5017,-73.5673');
+            await page.click('#btn-start');
+
+            // Wait for the car card to appear (search has completed and UI updated)
+            await expect(page.locator('.car-card')).toBeVisible();
+
+            const overlayBox = await page.locator('#results-overlay').boundingBox();
+            const mapBox = await page.locator('#map').boundingBox();
+
+            expect(overlayBox).not.toBeNull();
+            expect(mapBox).not.toBeNull();
+
+            // Panel must be to the RIGHT of the map (panel left edge >= map right edge)
+            expect(overlayBox.x).toBeGreaterThanOrEqual(mapBox.x + mapBox.width - 1);
+
+            // Both must share roughly the same top position (within 2px)
+            expect(Math.abs(overlayBox.y - mapBox.y)).toBeLessThan(2);
+
+            // Both must have meaningful equal height
+            expect(overlayBox.height).toBeGreaterThan(100);
+            expect(mapBox.height).toBeGreaterThan(100);
+            expect(Math.abs(overlayBox.height - mapBox.height)).toBeLessThan(2);
+        });
     });
 });
