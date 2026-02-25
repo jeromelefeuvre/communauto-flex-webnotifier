@@ -1,7 +1,7 @@
 # AI Assistant Instructions for Communauto Flex WebNotifier
 
-### 1. 🚨 NEVER PUSH TO GIT (CRITICAL)
-Under NO circumstances are you allowed to execute `git push` (to any branch or tag) or publish any code to a remote repository automatically. You may write code, run tests, and even `git commit` locally, but you **MUST explicitly ask the user for permission** to push before ever transmitting code to a remote server. Do not assume consent.
+### 1. 🚨 NEVER PUSH OR COMMIT TO GIT WITHOUT PERMISSION (CRITICAL)
+Under NO circumstances are you allowed to execute `git push` or `git commit` automatically. You may write code and run tests locally, but you **MUST explicitly ask the user for permission** before committing or transmitting any code. Do not assume consent.
 
 ### 2. ✅ TEST COVERAGE FOR EVERY BUG AND FEATURE
 For every bug fix or new feature discussed with the user, you **must** write or update Playwright tests (`tests/app.spec.js` or `tests/ui.spec.js`) that directly cover the changed behavior. Do not mark a feature complete or commit without a corresponding test that would catch a regression of that exact bug or feature. Additionally, after every change, **review all existing tests** to identify any that have become useless, redundant, or invalid due to the change — and remove or update them accordingly.
