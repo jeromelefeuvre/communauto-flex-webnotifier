@@ -97,8 +97,6 @@ const MapController = {
                     style: { color: '#3b82f6', weight: 6, opacity: 0.8, dashArray: '10, 10' }
                 }).addTo(this.map);
 
-                this.map.fitBounds(this.activeRoute.getBounds(), { padding: [50, 50] });
-
                 return {
                     distance: data.routes[0].distance,
                     duration: data.routes[0].duration
