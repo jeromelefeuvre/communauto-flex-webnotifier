@@ -39,22 +39,17 @@
         flex-wrap: wrap;
     }
 
-    /* Move the overlay out of floating path since screen is too small */
+    /* On small screens, collapse the sidebar into a stacked layout above the map */
     .results-overlay {
-        position: relative;
-        top: 0;
-        left: 0;
         width: 100%;
-        max-height: 400px;
-        box-shadow: none;
-        padding-right: 0;
-        margin-top: 16px;
-        pointer-events: auto;
+        height: auto;
+        max-height: 300px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .map-container {
-        display: flex;
-        flex-direction: column-reverse;
+        flex-direction: column;
         min-height: 500px;
         overflow-y: auto;
     }
@@ -109,8 +104,6 @@
     }
 
     .results-overlay {
-        max-height: none;
-        background: transparent;
-        margin-top: 8px;
+        max-height: 200px;
     }
 }
