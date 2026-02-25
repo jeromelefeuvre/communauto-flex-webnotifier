@@ -72,7 +72,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     test('UI Loads correctly', async ({ page }) => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex WebNotify');
-        await expect(page.locator('#floating-search-bar')).toBeVisible();
         await expect(page.locator('#map')).toBeVisible();
     });
 
@@ -133,9 +132,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Hard wait to allow Leaflet tile rendering engines to settle before abruptly resizing bounds
         await page.waitForTimeout(1500);
 
-        // Expand the sleek UI to access the inputs
-        await page.click('#floating-search-bar');
-
         // Sync Leaflet's internal metrics before changing bounds in a racing CI environment
         await page.evaluate(() => window.MapController.map.invalidateSize());
 
@@ -174,7 +170,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Since we just stopped the initial auto-search, the form should already be visible.
 
         // We must expand the sleek UI to access the input
-        await page.click('#floating-search-bar');
 
         // Change distance to 800m to include the car via simulated slider drag
         await page.evaluate(() => {
@@ -189,8 +184,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
 
         // Now cars are found, the form IS collapsed. We must click modify to read distance.
-        await expect(page.locator('#floating-search-bar')).toBeVisible();
-        await page.click('#floating-search-bar');
 
         // The visible value should remain 800
         const visibleValue = await page.evaluate(() => document.getElementById('distance').value);

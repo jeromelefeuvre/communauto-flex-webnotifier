@@ -9,12 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/variables.css">
+    <link rel="stylesheet" href="static/css/base.css">
+    <link rel="stylesheet" href="static/css/layout.css">
+    <link rel="stylesheet" href="static/css/forms.css">
+    <link rel="stylesheet" href="static/css/components.css">
+    <link rel="stylesheet" href="static/css/responsive.css">
 </head>
 
 <body>
     <div class="layout-container">
-        <div class="app-container">
+        <div class="top-bar-container">
             <header>
                 <h1>Communauto Flex WebNotify</h1>
                 <p class="subtitle">Find your next ride instantly</p>
@@ -41,10 +46,10 @@
                     </svg>
                 </div>
 
-                <form id="notify-form">
-                    <div id="form-inputs">
+                <form id="notify-form" class="horizontal-form">
+                    <div id="form-inputs" class="form-inputs-row">
                         <div class="form-group">
-                            <label for="city">City</label>
+                            <label for="city" class="sr-only">City</label>
                             <select id="city" name="city">
                                 <option value="montreal" selected>Montreal</option>
                                 <option value="quebec">Quebec</option>
@@ -52,30 +57,29 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <div
-                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <label for="distance" style="margin-bottom: 0;">Search Radius</label>
-                                <span id="distance-value"
-                                    style="font-weight: 600; color: var(--accent-color);">600m</span>
+                        <div class="form-group distance-group">
+                            <div class="distance-label-row">
+                                <label for="distance">Radius</label>
+                                <span id="distance-value">600m</span>
                             </div>
                             <input type="range" id="distance" name="distance" value="600" min="500" max="2000"
                                 step="100">
                         </div>
 
-                        <div class="form-group">
-                            <label for="delay">Check Interval (seconds)</label>
-                            <input type="number" id="delay" name="delay" value="15" min="5" max="300">
+                        <div class="form-group hidden">
+                            <label for="delay" class="sr-only">Interval(s)</label>
+                            <input type="number" id="delay" name="delay" value="30" min="30" max="300"
+                                placeholder="15s">
                         </div>
 
                         <div class="form-group">
-                            <label for="location">Location (Optional: lat,lng)</label>
+                            <label for="location" class="sr-only">Location</label>
                             <div class="location-input-wrapper">
                                 <input type="text" id="location" name="location" value=""
                                     placeholder="Leave empty for GPS">
                                 <button type="button" id="btn-geolocation" class="icon-btn"
                                     title="Use Current Location">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                         stroke-width="2">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <circle cx="12" cy="12" r="3"></circle>
@@ -84,11 +88,19 @@
                             </div>
                         </div>
                     </div>
-
-                    <button type="submit" id="btn-start" class="primary-btn">Start Searching</button>
-                    <button type="button" id="btn-stop" class="danger-btn hidden">Stop Searching</button>
+                    <div class="form-actions">
+                        <button type="submit" id="btn-start" class="primary-btn">Search</button>
+                        <button type="button" id="btn-stop" class="danger-btn hidden">Stop</button>
+                    </div>
                 </form>
+            </main>
+        </div>
 
+        <div class="map-container hidden" id="map-wrapper">
+            <div id="map"></div>
+
+            <!-- Option B: Floating Results Panel -->
+            <div id="results-overlay" class="results-overlay">
                 <div id="status-container" class="status-container hidden">
                     <div class="loader"></div>
                     <p id="status-text">Initializing...</p>
@@ -97,12 +109,10 @@
                 <div id="results-container" class="results-container">
                     <!-- Cars will appear here -->
                 </div>
-            </main>
+            </div>
         </div>
 
-        <div class="map-container hidden" id="map-wrapper">
-            <div id="map"></div>
-        </div>
+
     </div>
 
     <div id="app-banner" class="app-banner">

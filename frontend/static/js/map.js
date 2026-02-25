@@ -9,7 +9,8 @@ const MapController = {
 
     init: function (lat, lng) {
         if (this.map) return;
-        this.map = L.map('map').setView([lat, lng], 14);
+        this.map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
+        L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap contributors &copy; CARTO',

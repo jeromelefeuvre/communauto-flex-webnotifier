@@ -1,0 +1,177 @@
+.floating-search-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 100px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.floating-search-bar:hover {
+    border-color: var(--accent-color);
+    background: rgba(30, 41, 59, 0.95);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+}
+
+.floating-search-bar svg {
+    color: var(--text-secondary);
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+
+.floating-search-bar:hover svg {
+    color: var(--accent-color);
+}
+
+#floating-search-text {
+    flex-grow: 1;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    padding: 0 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Option B Overlay */
+.results-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 380px;
+    max-height: calc(100% - 48px);
+    z-index: 1000;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+/* Custom Scrollbar for Overlay */
+.results-overlay::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-overlay::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.results-overlay::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+}
+
+.results-overlay>* {
+    pointer-events: auto;
+}
+
+.results-container {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.status-container {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+#status-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.car-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.car-card:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.car-card.selected {
+    border-color: var(--accent-color);
+    background: linear-gradient(rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.08)), var(--bg-color);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.car-info h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.car-info p {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.book-btn {
+    background: var(--success-bg);
+    color: var(--success-border);
+    border: 1px solid var(--success-border);
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.book-btn:hover {
+    background: var(--success-border);
+    color: var(--bg-color);
+}

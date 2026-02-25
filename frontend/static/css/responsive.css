@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Responsive Design & Mobile Handling
+   ========================================================================== */
+
+/* Desktop View (Min Width: 901px) - Prevent Form Collapse */
+@media (min-width: 901px) {
+
+    .floating-search-bar,
+    .floating-search-bar.hidden {
+        display: none !important;
+    }
+
+    .form-inputs-row.hidden {
+        display: flex !important;
+    }
+}
+
+/* Tablet & Smaller Desktop (Max Width: 900px) */
+@media (max-width: 900px) {
+    .layout-container {
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .top-bar-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    header {
+        text-align: center;
+        min-width: auto;
+    }
+
+    .form-inputs-row {
+        flex-wrap: wrap;
+    }
+
+    /* Move the overlay out of floating path since screen is too small */
+    .results-overlay {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-height: 400px;
+        box-shadow: none;
+        padding-right: 0;
+        margin-top: 16px;
+        pointer-events: auto;
+    }
+
+    .map-container {
+        display: flex;
+        flex-direction: column-reverse;
+        min-height: 500px;
+        overflow-y: auto;
+    }
+}
+
+/* Mobile Devices (Max Width: 480px) */
+@media (max-width: 480px) {
+    .layout-container {
+        padding: 0;
+        gap: 0;
+        height: 100vh;
+    }
+
+    .top-bar-container {
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    .horizontal-form {
+        flex-wrap: wrap;
+    }
+
+    .form-inputs-row {
+        gap: 8px;
+    }
+
+    .form-actions {
+        width: 100%;
+        margin-top: 4px;
+        flex-direction: row;
+    }
+
+    .form-actions button {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .map-container {
+        border-radius: 0;
+        border: none;
+        min-height: calc(100vh - 200px);
+    }
+
+    .results-overlay {
+        max-height: none;
+        background: transparent;
+        margin-top: 8px;
+    }
+}
