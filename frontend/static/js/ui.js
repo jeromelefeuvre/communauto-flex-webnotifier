@@ -65,11 +65,30 @@ const UIController = {
         cars.forEach((car, index) => {
             html += `
                 <div class="car-card" data-plate="${car.plate}" data-lat="${car.lat}" data-lng="${car.lng}">
-                    <div class="car-info">
-                        <h3>${car.brand} ${car.model}</h3>
-                        <p id="desc-${car.plate}" class="car-card-desc">${Math.floor(car.distance)}m away (straight line) • Plate: ${car.plate} • ${car.color}</p>
+                    <div class="car-info-layout">
+                        <div class="car-icon-wrapper">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="10" width="18" height="10" rx="2" ry="2"></rect>
+                                <line x1="7" y1="14" x2="7" y2="14"></line>
+                                <line x1="17" y1="14" x2="17" y2="14"></line>
+                                <path d="M4 10l2-4h12l2 4"></path>
+                            </svg>
+                        </div>
+                        <div class="car-details">
+                            <h3 class="car-title">${car.brand} ${car.model}</h3>
+                            <div class="car-meta">${car.color} • Plate: ${car.plate}</div>
+                            <div id="desc-${car.plate}" class="car-distance">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                <span>${Math.floor(car.distance)}m (straight line)</span>
+                            </div>
+                        </div>
                     </div>
-                    <a href="${bookingUrl}" target="_blank" class="book-btn" onclick="event.stopPropagation()">Reserve</a>
+                    <div class="car-actions">
+                        <a href="${bookingUrl}" target="_blank" class="book-btn" onclick="event.stopPropagation()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Reserve
+                        </a>
+                    </div>
                 </div>
             `;
         });
@@ -108,7 +127,11 @@ const UIController = {
     updateCarUIWithWalkingData: function (car, walkDistanceStr, walkMins) {
         const cardDesc = document.getElementById(`desc-${car.plate}`);
         if (cardDesc) {
-            cardDesc.innerText = `${walkDistanceStr} walking (${walkMins} min) • Plate: ${car.plate} • ${car.color}`;
+            cardDesc.classList.add('has-walking');
+            cardDesc.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>
+                <span class="walking-highlight">${walkDistanceStr} walk (${walkMins} min)</span>
+            `;
         }
     },
 

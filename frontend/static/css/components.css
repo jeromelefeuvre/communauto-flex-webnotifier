@@ -79,7 +79,12 @@
     margin-top: 24px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    /* Create a unified panel like Google Maps */
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
 .status-container {
@@ -114,27 +119,30 @@
 }
 
 .car-card {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 20px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 12px;
     animation: slideIn 0.3s ease-out;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease;
+}
+
+.car-card:last-child {
+    border-bottom: none;
 }
 
 .car-card:hover {
-    border-color: var(--accent-color);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .car-card.selected {
-    border-color: var(--accent-color);
-    background: linear-gradient(rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.08)), var(--bg-color);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: inset 4px 0 0 var(--accent-color);
+    /* Google maps style left highlight */
 }
 
 @keyframes slideIn {
@@ -149,29 +157,87 @@
     }
 }
 
-.car-info h3 {
-    font-size: 16px;
-    margin-bottom: 4px;
+.car-info-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
 }
 
-.car-info p {
-    font-size: 14px;
+.car-icon-wrapper {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--accent-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.car-details {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.car-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.car-meta {
+    font-size: 13px;
     color: var(--text-secondary);
 }
 
-.book-btn {
-    background: var(--success-bg);
-    color: var(--success-border);
-    border: 1px solid var(--success-border);
-    padding: 8px 16px;
-    border-radius: 6px;
-    text-decoration: none;
+.car-distance {
+    font-size: 14px;
+    color: var(--text-primary);
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.car-distance svg {
+    color: var(--text-secondary);
+}
+
+.walking-highlight {
+    color: var(--success-border);
+}
+
+.car-distance.has-walking svg {
+    color: var(--success-border);
+}
+
+.car-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.book-btn {
+    background: transparent;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    padding: 8px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
     font-size: 14px;
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .book-btn:hover {
-    background: var(--success-border);
-    color: var(--bg-color);
+    background: var(--accent-color);
+    color: #fff;
 }

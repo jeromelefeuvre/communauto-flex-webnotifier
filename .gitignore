@@ -3,3 +3,4 @@ report/
 .env
 .DS_Store
 .gemini/
+monocart-report/

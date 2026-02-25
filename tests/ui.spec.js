@@ -44,6 +44,7 @@ test.describe('UI Responsive Regression Tests', () => {
             await expect(page.locator('#btn-start')).toBeVisible();
 
             // When searching begins, the form collapses into the floating pill
+            await page.fill('#location', '45.5017,-73.5673');
             await page.click('#btn-start');
 
             // Wait for UI to update its classes
@@ -66,6 +67,7 @@ test.describe('UI Responsive Regression Tests', () => {
             await expect(page.locator('#btn-start')).toBeVisible();
 
             // Start search
+            await page.fill('#location', '45.5017,-73.5673');
             await page.click('#btn-start');
 
             // Wait for UI toggle (the HTML element gets the 'hidden' class from JS)
