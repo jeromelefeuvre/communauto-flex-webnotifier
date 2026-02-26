@@ -4,3 +4,4 @@ report/
 .DS_Store
 .gemini/
 monocart-report/
+.claude/settings.local.json
