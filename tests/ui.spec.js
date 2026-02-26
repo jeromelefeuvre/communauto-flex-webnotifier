@@ -47,6 +47,7 @@ test.describe('UI Responsive Regression Tests', () => {
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
                 document.getElementById('location').value = '45.5017,-73.5673';
+                document.getElementById('btn-start').disabled = false;
             });
             await page.click('#btn-start');
 
@@ -73,6 +74,7 @@ test.describe('UI Responsive Regression Tests', () => {
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
                 document.getElementById('location').value = '45.5017,-73.5673';
+                document.getElementById('btn-start').disabled = false;
             });
             await page.click('#btn-start');
 
@@ -114,6 +116,7 @@ test.describe('UI Responsive Regression Tests', () => {
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
                 document.getElementById('location').value = '45.5017,-73.5673';
+                document.getElementById('btn-start').disabled = false;
             });
             await page.click('#btn-start');
 

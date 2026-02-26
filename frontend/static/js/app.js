@@ -76,9 +76,6 @@ UIController.els.form.addEventListener('submit', async (e) => {
         const locString = UIController.els.locationInput.value;
         if (locString) {
             AppState.userLocation = locString.split(',').map(c => parseFloat(c.trim()));
-        } else {
-            alert("Please allow GPS access or enter an address to get started.");
-            return;
         }
     }
 

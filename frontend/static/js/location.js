@@ -58,6 +58,7 @@ const LocationController = {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
         UIController.els.btnGeo.className = 'geo-btn geo-success';
+        UIController.els.btnStart.disabled = false;
 
         this.hideAddressInput();
         if (autoStart) {
@@ -90,7 +91,7 @@ const LocationController = {
         if (query.length === 0) {
             // Field cleared — revert to error state so user knows no location is set
             UIController.els.btnGeo.className = 'geo-btn geo-error';
-    
+            UIController.els.btnStart.disabled = true;
             UIController.els.locationInput.value = '';
             if (typeof AppState !== 'undefined') AppState.userLocation = null;
             this.hideSuggestions();
@@ -222,6 +223,7 @@ const LocationController = {
         }
         // Switch button from red error state to blue success — address is now set
         UIController.els.btnGeo.className = 'geo-btn geo-success';
+        UIController.els.btnStart.disabled = false;
 
         this.hideSuggestions();
     },
