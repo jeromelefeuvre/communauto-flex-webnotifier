@@ -63,11 +63,6 @@
         height: 100vh;
     }
 
-    /* ── Hide decorative header on mobile ── */
-    header {
-        display: none;
-    }
-
     .top-bar-container {
         border-radius: 0;
         border: none;

@@ -40,6 +40,10 @@ test.describe('UI Responsive Regression Tests', () => {
             await expect(page.locator('.app-banner')).toBeVisible();
         });
 
+        test('Header title is visible on mobile', async ({ page }) => {
+            await expect(page.locator('header')).toBeVisible();
+        });
+
         test('Address autocomplete works on mobile viewport', async ({ page }) => {
             await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
                 contentType: 'application/json',
