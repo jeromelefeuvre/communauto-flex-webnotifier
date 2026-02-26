@@ -65,7 +65,7 @@ const MapController = {
         this.carMarkers = [];
 
         const carIcon = L.icon({
-            iconUrl: 'proxy-image?url=' + encodeURIComponent('https://www.reservauto.net/images/GoogleMaps/pin-am.png'),
+            iconUrl: 'static/images/pin-am.png',
             iconSize: [20, 27],
             iconAnchor: [18, 18],
             popupAnchor: [0, -18]

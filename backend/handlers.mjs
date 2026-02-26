@@ -1,4 +1,3 @@
-import http from 'http';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
@@ -53,31 +52,6 @@ export function handleVersionProxy(res) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ version: 'error' }));
         }
-    });
-}
-
-export function handleImageProxy(requestUrl, res) {
-    const urlParams = new URLSearchParams(requestUrl.split('?')[1]);
-    const imgUrl = urlParams.get('url');
-
-    if (!imgUrl) {
-        res.writeHead(400);
-        return res.end('Missing url parameter');
-    }
-
-    console.log(`[IMG] Proxying image request to: ${imgUrl}`);
-    const protocol = imgUrl.startsWith('https') ? https : http;
-
-    protocol.get(imgUrl, (proxyRes) => {
-        res.writeHead(proxyRes.statusCode, {
-            'Content-Type': proxyRes.headers['content-type'] || 'image/png',
-            'Access-Control-Allow-Origin': '*'
-        });
-        proxyRes.pipe(res);
-    }).on('error', (err) => {
-        console.error('[IMG] Image Proxy Error:', err);
-        res.writeHead(500);
-        res.end('Error fetching image');
     });
 }
 

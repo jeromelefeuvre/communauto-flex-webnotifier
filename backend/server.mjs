@@ -1,5 +1,5 @@
 import http from 'http';
-import { handleApiProxy, handleVersionProxy, handleImageProxy, handleStaticFiles } from './handlers.mjs';
+import { handleApiProxy, handleVersionProxy, handleStaticFiles } from './handlers.mjs';
 
 const PORT = process.env.PORT || 8000;
 
@@ -30,10 +30,6 @@ const server = http.createServer((req, res) => {
 
     if (requestUrl.startsWith('/api/version')) {
         return handleVersionProxy(res);
-    }
-
-    if (requestUrl.startsWith('/proxy-image')) {
-        return handleImageProxy(requestUrl, res);
     }
 
     return handleStaticFiles(requestUrl, res);
