@@ -136,7 +136,8 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .location-widget {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: flex-start;
     gap: 8px;
     position: relative;
 }
@@ -145,8 +146,8 @@ input[type="range"]::-moz-range-thumb:hover {
 .geo-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    flex-shrink: 0;
+    padding: 8px;
     background: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: 8px;

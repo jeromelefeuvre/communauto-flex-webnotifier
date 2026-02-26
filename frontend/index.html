@@ -74,19 +74,18 @@
 
                         <div class="form-group location-group">
                             <div class="location-widget">
+                                <div id="address-input-wrapper" class="address-input-wrapper hidden">
+                                    <input type="text" id="address-input" autocomplete="off"
+                                        placeholder="Enter an address…" spellcheck="false" />
+                                    <ul id="address-suggestions" class="address-suggestions hidden"></ul>
+                                </div>
                                 <button type="button" id="btn-geolocation" class="geo-btn" title="Use Current Location">
                                     <svg id="geo-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
                                         stroke="currentColor" stroke-width="2">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <circle cx="12" cy="12" r="3"></circle>
                                     </svg>
-                                    <span id="geo-label">Locating…</span>
                                 </button>
-                                <div id="address-input-wrapper" class="address-input-wrapper hidden">
-                                    <input type="text" id="address-input" autocomplete="off"
-                                        placeholder="Enter an address…" spellcheck="false" />
-                                    <ul id="address-suggestions" class="address-suggestions hidden"></ul>
-                                </div>
                             </div>
                             <!-- Hidden field stores the resolved coordinates for form submission -->
                             <input type="hidden" id="location" name="location" value="">

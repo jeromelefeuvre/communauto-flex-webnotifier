@@ -5,7 +5,7 @@ const UIController = {
         btnStart: document.getElementById('btn-start'),
         btnStop: document.getElementById('btn-stop'),
         btnGeo: document.getElementById('btn-geolocation'),
-        geoLabel: document.getElementById('geo-label'),
+
         locationInput: document.getElementById('location'),
         addressWrapper: document.getElementById('address-input-wrapper'),
         addressInput: document.getElementById('address-input'),

@@ -161,8 +161,6 @@ test.describe('LocationController — Smart Location Widget', () => {
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/, { timeout: 5000 });
 
         // Label should confirm GPS found
-        await expect(page.locator('#geo-label')).toHaveText('Location found');
-
         // Address input wrapper must remain hidden
         await expect(page.locator('#address-input-wrapper')).toBeHidden();
 
@@ -179,7 +177,6 @@ test.describe('LocationController — Smart Location Widget', () => {
         await page.evaluate(() => LocationController.onGpsError());
 
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-error/);
-        await expect(page.locator('#geo-label')).toHaveText('No GPS — enter address');
         await expect(page.locator('#address-input-wrapper')).toBeVisible();
     });
 
@@ -236,9 +233,8 @@ test.describe('LocationController — Smart Location Widget', () => {
         const hiddenVal = await page.evaluate(() => document.getElementById('location').value);
         expect(hiddenVal).toBe('45.508800,-73.587800');
 
-        // GPS button must switch to success state — red error label is gone
+        // GPS button must switch to success state
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/);
-        await expect(page.locator('#geo-label')).toHaveText('Location found');
     });
 
     test('_toFrenchQuery: English street types are converted to French', async ({ page }) => {
@@ -276,6 +272,8 @@ test.describe('LocationController — Smart Location Widget', () => {
             });
         });
 
+        // "Montreal" is already the selected city, so the query includes it
+        // but the input itself also contains "Montreal" — no duplication
         await page.fill('#address-input', '9128 Berri Street Montreal');
 
         // Wait for suggestions to appear
@@ -285,5 +283,64 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(capturedUrls.length).toBe(2);
         expect(capturedUrls.some(u => u.includes('Berri+Street') || u.includes('Berri%20Street'))).toBe(true);
         expect(capturedUrls.some(u => u.includes('rue+Berri') || u.includes('rue%20Berri'))).toBe(true);
+    });
+
+    test('Address autocomplete: postal code uses geocoder.ca for precise results', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+        await page.evaluate(() => LocationController.onGpsError());
+
+        const capturedUrls = [];
+        await page.route('**/geocoder.ca/**', route => {
+            capturedUrls.push(route.request().url());
+            return route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    latt: '45.549718', longt: '-73.652587', postal: 'H2M1R4',
+                    standard: { city: 'Montréal', prov: 'QC', confidence: '0.9' }
+                })
+            });
+        });
+
+        // Type a postal code without space / lowercase — should still work
+        await page.fill('#address-input', 'h2m1r4');
+
+        // Wait for suggestions to appear
+        await expect(page.locator('#address-suggestions li')).toBeVisible({ timeout: 2000 });
+
+        // Should hit geocoder.ca (not Nominatim)
+        expect(capturedUrls.length).toBe(1);
+        expect(capturedUrls[0]).toContain('geocoder.ca');
+        expect(capturedUrls[0]).toContain('H2M');
+
+        // Suggestion text should show formatted postal code with city
+        await expect(page.locator('#address-suggestions li').first()).toContainText('H2M 1R4');
+        await expect(page.locator('#address-suggestions li').first()).toContainText('Montréal');
+    });
+
+    test('Address cleared: GPS button reverts to red and location is reset', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+        await page.evaluate(() => LocationController.onGpsError());
+
+        // Simulate selecting an address first (button turns blue)
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5088, -73.5878];
+            document.getElementById('location').value = '45.508800,-73.587800';
+            UIController.els.btnGeo.className = 'geo-btn geo-success';
+        });
+
+        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/);
+
+        // Now clear the address input
+        await page.fill('#address-input', '');
+        // Trigger the input event manually (fill doesn't always fire it)
+        await page.evaluate(() => UIController.els.addressInput.dispatchEvent(new Event('input')));
+
+        // Button must revert to red
+        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-error/);
+        // Location must be cleared
+        const loc = await page.evaluate(() => AppState.userLocation);
+        expect(loc).toBeNull();
+        const hiddenVal = await page.evaluate(() => document.getElementById('location').value);
+        expect(hiddenVal).toBe('');
     });
 });

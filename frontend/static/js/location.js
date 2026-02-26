@@ -39,14 +39,14 @@ const LocationController = {
     setIdle: function () {
         const btn = UIController.els.btnGeo;
         btn.className = 'geo-btn';
-        UIController.els.geoLabel.textContent = 'Use GPS';
+
         this.hideAddressInput();
     },
 
     setLoading: function () {
         const btn = UIController.els.btnGeo;
         btn.className = 'geo-btn';
-        UIController.els.geoLabel.textContent = 'Locating…';
+
     },
 
     onGpsSuccess: function (position, autoStart = false) {
@@ -58,7 +58,7 @@ const LocationController = {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
         UIController.els.btnGeo.className = 'geo-btn geo-success';
-        UIController.els.geoLabel.textContent = 'Location found';
+
         this.hideAddressInput();
         if (autoStart) {
             UIController.els.btnStart.click();
@@ -68,7 +68,7 @@ const LocationController = {
     onGpsError: function () {
         UIController.els.locationInput.value = '';
         UIController.els.btnGeo.className = 'geo-btn geo-error';
-        UIController.els.geoLabel.textContent = 'No GPS — enter address';
+
         this.showAddressInput();
     },
 
@@ -87,8 +87,24 @@ const LocationController = {
     onAddressInput: function () {
         clearTimeout(this._debounceTimer);
         const query = UIController.els.addressInput.value.trim();
+        if (query.length === 0) {
+            // Field cleared — revert to error state so user knows no location is set
+            UIController.els.btnGeo.className = 'geo-btn geo-error';
+    
+            UIController.els.locationInput.value = '';
+            if (typeof AppState !== 'undefined') AppState.userLocation = null;
+            this.hideSuggestions();
+            return;
+        }
         if (query.length < 3) { this.hideSuggestions(); return; }
         this._debounceTimer = setTimeout(() => this.fetchSuggestions(query), 350);
+    },
+
+    // Detect and normalize Canadian postal codes (e.g. "h2m1r4" → "H2M 1R4")
+    _parsePostalCode: function (query) {
+        const match = query.match(/^([A-Za-z]\d[A-Za-z])\s*(\d[A-Za-z]\d)$/);
+        if (!match) return null;
+        return `${match[1]} ${match[2]}`.toUpperCase();
     },
 
     // Build a French-Quebec equivalent of an English address query.
@@ -124,11 +140,37 @@ const LocationController = {
     fetchSuggestions: async function (query) {
         try {
             const headers = { 'Accept-Language': 'fr,en' };
+            const city = UIController.els.city.selectedOptions[0].text;
+
+            // Postal codes use geocoder.ca for precise neighborhood-level results
+            const postalCode = this._parsePostalCode(query);
+            if (postalCode) {
+                const url = `https://geocoder.ca/?locate=${encodeURIComponent(postalCode)}&geoit=XML&json=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.latt && data.longt) {
+                    const city_ = data.standard?.city || city;
+                    const prov = data.standard?.prov || '';
+                    this.renderSuggestions([{
+                        display_name: `${postalCode}, ${city_}${prov ? ', ' + prov : ''}, Canada`,
+                        lat: data.latt,
+                        lon: data.longt
+                    }]);
+                } else {
+                    this.hideSuggestions();
+                }
+                return;
+            }
+
+            // Append the selected city to improve results
+            const queryWithCity = query.toLowerCase().includes(city.toLowerCase())
+                ? query
+                : `${query}, ${city}`;
             const buildUrl = q =>
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&countrycodes=ca`;
 
-            const frQuery = this._toFrenchQuery(query);
-            const requests = [fetch(buildUrl(query), { headers })];
+            const frQuery = this._toFrenchQuery(queryWithCity);
+            const requests = [fetch(buildUrl(queryWithCity), { headers })];
             if (frQuery) requests.push(fetch(buildUrl(frQuery), { headers }));
 
             const responses = await Promise.all(requests);
@@ -180,7 +222,7 @@ const LocationController = {
         }
         // Switch button from red error state to blue success — address is now set
         UIController.els.btnGeo.className = 'geo-btn geo-success';
-        UIController.els.geoLabel.textContent = 'Location found';
+
         this.hideSuggestions();
     },
 
