@@ -63,47 +63,150 @@
         height: 100vh;
     }
 
+    /* ── Hide decorative header on mobile ── */
+    header {
+        display: none;
+    }
+
     .top-bar-container {
         border-radius: 0;
         border: none;
         border-bottom: 1px solid var(--border-color);
-        padding: 12px;
+        padding: 10px;
+        gap: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         z-index: 10;
         background: rgba(30, 41, 59, 0.95);
         backdrop-filter: blur(10px);
     }
 
-    h1 {
-        font-size: 20px;
-    }
-
     .horizontal-form {
         flex-wrap: wrap;
     }
 
+    /* ── Two-column layout: City + Distance side-by-side ── */
     .form-inputs-row {
-        gap: 8px;
+        gap: 6px;
     }
 
+    .form-group {
+        min-width: 0;
+    }
+
+    .form-group:first-child {
+        flex: 0 0 35%;
+    }
+
+    .distance-group {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .distance-label-row {
+        margin-bottom: 2px;
+    }
+
+    .distance-label-row label,
+    .distance-label-row span {
+        font-size: 12px;
+    }
+
+    .location-group {
+        flex-basis: 100%;
+    }
+
+    /* ── Compact form actions ── */
     .form-actions {
         width: 100%;
-        margin-top: 4px;
+        min-width: 0;
+        margin-top: 0;
         flex-direction: row;
     }
 
     .form-actions button {
         width: 100%;
-        padding: 12px;
+        padding: 10px;
     }
 
+    /* ── Map fills remaining space ── */
     .map-container {
         border-radius: 0;
         border: none;
         min-height: calc(100vh - 200px);
+        position: relative;
     }
 
+    /* ── Bottom-sheet results overlay ── */
     .results-overlay {
-        max-height: 200px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 35vh;
+        height: auto;
+        overflow-y: auto;
+        border-right: none;
+        border-bottom: none;
+        border-top: 1px solid var(--border-color);
+        border-radius: 16px 16px 0 0;
+        background: rgba(30, 41, 59, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+        z-index: 20;
+    }
+
+    .results-container {
+        overflow-y: visible;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    /* ── Compact car cards ── */
+    .car-card {
+        padding: 10px 14px;
+    }
+
+    .car-info-layout {
+        gap: 10px;
+    }
+
+    .car-icon-wrapper {
+        width: 32px;
+        height: 32px;
+    }
+
+    .car-icon-wrapper svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .car-title {
+        font-size: 14px;
+    }
+
+    .car-meta {
+        font-size: 12px;
+    }
+
+    .car-distance {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    .car-actions {
+        right: 14px;
+        bottom: 10px;
+    }
+
+    .book-btn {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    /* ── Hide footer banner ── */
+    .app-banner {
+        display: none;
     }
 }

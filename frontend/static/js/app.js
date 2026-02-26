@@ -34,7 +34,7 @@ UIController.els.distance.addEventListener('input', (e) => {
     if (!isNaN(newRadius) && MapController.searchCircle && MapController.map) {
         MapController.searchCircle.setRadius(newRadius);
         // Automatically zoom the map to gracefully fit the newly sized circle bounds
-        MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
+        MapController.map.fitBounds(MapController.searchCircle.getBounds(), MapController.getFitPadding());
     }
 });
 
@@ -119,7 +119,7 @@ UIController.els.form.addEventListener('submit', async (e) => {
 
         MapController.map.invalidateSize();
         if (shouldFitBounds && MapController.searchCircle) {
-            MapController.map.fitBounds(MapController.searchCircle.getBounds(), { padding: [20, 20] });
+            MapController.map.fitBounds(MapController.searchCircle.getBounds(), MapController.getFitPadding());
         }
         AppController.searchLoop(city, delay);
     };
@@ -200,9 +200,14 @@ const AppController = {
 
                 stopSearch();
 
-                // Automatically select the closest car (the first one) to draw the initial route
-                const firstCard = document.querySelector('.car-card');
-                if (firstCard) firstCard.click();
+                // Fetch walking distances for all cars in parallel and update UI as each resolves
+                topCars.forEach(car => {
+                    MapController.getWalkingDistance(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(walkData => {
+                        if (walkData) {
+                            UIController.updateCarUIWithWalkingData(car, MathUtils.humanDistance(walkData.distance), Math.round(walkData.duration / 60));
+                        }
+                    });
+                });
 
                 return;
             } else {

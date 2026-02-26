@@ -223,13 +223,20 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         const firstCar = page.locator('.car-card').nth(0);
         const secondCar = page.locator('.car-card').nth(1);
 
-        // Verify initial selection state (first car is auto-selected)
+        // No car is auto-selected initially (walking distances are fetched but no route drawn)
+        await expect(firstCar).not.toHaveClass(/selected/);
+        await expect(secondCar).not.toHaveClass(/selected/);
+
+        // Click the first car to select it and draw a route
+        await firstCar.click();
         await expect(firstCar).toHaveClass(/selected/);
         await expect(secondCar).not.toHaveClass(/selected/);
 
-        // Record the initial routed coordinate
-        const initialRoutedCoord = await page.evaluate(() => window.MapController.lastRoutedCoord);
-        expect(initialRoutedCoord).toBe('45.556,-73.652'); // Latitude: 45.556000, Longitude: -73.652000
+        // Record the routed coordinate after clicking first car
+        await expect(async () => {
+            const routedCoord = await page.evaluate(() => window.MapController.lastRoutedCoord);
+            expect(routedCoord).toBe('45.556,-73.652');
+        }).toPass({ timeout: 5000 });
 
         // Click the second car
         await secondCar.click();
@@ -241,7 +248,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Verify that the route was drawn to the new car's coordinates
         await expect(async () => {
             const activeRouteCoords = await page.evaluate(() => window.MapController.lastRoutedCoord);
-            expect(activeRouteCoords).toBe('45.5561,-73.6521'); // Latitude: 45.556100, Longitude: -73.652100
+            expect(activeRouteCoords).toBe('45.5561,-73.6521');
         }).toPass({ timeout: 5000 });
     });
 

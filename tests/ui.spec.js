@@ -98,6 +98,47 @@ test.describe('UI Responsive Regression Tests', () => {
             expect(stopBox).not.toBeNull();
         });
 
+        test('Results panel scrolls when car list overflows', async ({ page }) => {
+            await page.route('**/api/cars*', async route => {
+                await route.fulfill({
+                    json: {
+                        d: {
+                            Vehicles: [
+                                { CarBrand: 'Toyota', CarModel: 'Corolla', CarPlate: 'TST001', CarColor: 'white', Latitude: 45.5020, Longitude: -73.5680 },
+                                { CarBrand: 'Honda', CarModel: 'Civic', CarPlate: 'TST002', CarColor: 'black', Latitude: 45.5021, Longitude: -73.5681 },
+                                { CarBrand: 'Mazda', CarModel: '3', CarPlate: 'TST003', CarColor: 'red', Latitude: 45.5022, Longitude: -73.5682 },
+                            ]
+                        }
+                    }
+                });
+            });
+
+            // Mock walking distance API to avoid network calls
+            await page.route('**/routing.openstreetmap.de/**', route => route.fulfill({
+                json: { routes: [{ distance: 350, duration: 240 }] }
+            }));
+
+            await page.evaluate(() => {
+                AppState.userLocation = [45.5017, -73.5673];
+                document.getElementById('location').value = '45.5017,-73.5673';
+                document.getElementById('btn-start').disabled = false;
+            });
+            await page.click('#btn-start');
+            await expect(page.locator('.car-card')).toHaveCount(3);
+
+            // Inject extra cards to guarantee the list overflows the panel
+            const isScrollable = await page.evaluate(() => {
+                const container = document.getElementById('results-container');
+                const original = container.querySelector('.car-card');
+                for (let i = 0; i < 10; i++) {
+                    container.appendChild(original.cloneNode(true));
+                }
+                const overlay = document.getElementById('results-overlay');
+                return overlay.scrollHeight > overlay.clientHeight;
+            });
+            expect(isScrollable).toBe(true);
+        });
+
         test('Results panel sits side-by-side with map at equal height', async ({ page }) => {
             // Override the empty mock with a single car that is within the 600m radius
             await page.route('**/api/cars*', async route => {

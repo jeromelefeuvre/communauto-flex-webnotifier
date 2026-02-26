@@ -7,6 +7,15 @@ const MapController = {
     activeRoute: null,
     lastRoutedCoord: null,
 
+    // Returns fitBounds padding that accounts for the mobile bottom-sheet overlay.
+    getFitPadding: function () {
+        if (window.innerWidth <= 480) {
+            var bottomSheet = Math.round(window.innerHeight * 0.35);
+            return { paddingTopLeft: [10, 10], paddingBottomRight: [10, bottomSheet + 10] };
+        }
+        return { padding: [20, 20] };
+    },
+
     init: function (lat, lng) {
         if (this.map) return;
         this.map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);
@@ -45,7 +54,7 @@ const MapController = {
         }).addTo(this.map);
 
         if (fitBounds) {
-            this.map.fitBounds(this.searchCircle.getBounds(), { padding: [20, 20] });
+            this.map.fitBounds(this.searchCircle.getBounds(), this.getFitPadding());
         }
     },
 
@@ -64,19 +73,33 @@ const MapController = {
 
         filteredCars.forEach(car => {
             const marker = L.marker([car.lat, car.lng], { icon: carIcon, plate: car.plate }).addTo(this.map);
-            marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>${Math.floor(car.distance)}m away (straight line)<br>Plate: ${car.plate}`);
+            marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>Plate: ${car.plate}`);
 
             marker.on('click', () => {
                 this.drawRouteToCar(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(routeData => {
                     if (routeData) {
                         UIController.updateCarUIWithWalkingData(car, MathUtils.humanDistance(routeData.distance), Math.round(routeData.duration / 60));
-                        marker.setPopupContent(`<b>${car.brand} ${car.model}</b><br>${MathUtils.humanDistance(routeData.distance)} walk (${Math.round(routeData.duration / 60)} min)<br>Plate: ${car.plate}`);
                     }
                 });
             });
 
             this.carMarkers.push(marker);
         });
+    },
+
+    // Fetch walking distance/duration only (no route drawn on map).
+    getWalkingDistance: async function (startLat, startLng, endLat, endLng) {
+        try {
+            const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${startLng},${startLat};${endLng},${endLat}?overview=false`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.routes && data.routes.length > 0) {
+                return { distance: data.routes[0].distance, duration: data.routes[0].duration };
+            }
+        } catch (e) {
+            console.error("Could not fetch walking distance", e);
+        }
+        return null;
     },
 
     drawRouteToCar: async function (startLat, startLng, endLat, endLng) {

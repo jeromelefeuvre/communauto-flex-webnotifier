@@ -1,3 +1,5 @@
+const WALKING_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>';
+
 // UI Controller
 const UIController = {
     els: {
@@ -82,8 +84,8 @@ const UIController = {
                             <h3 class="car-title">${car.brand} ${car.model}</h3>
                             <div class="car-meta">${car.color} • Plate: ${car.plate}</div>
                             <div id="desc-${car.plate}" class="car-distance">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <span>${Math.floor(car.distance)}m (straight line)</span>
+                                ${WALKING_SVG}
+                                <span>calculating...</span>
                             </div>
                         </div>
                     </div>
@@ -133,9 +135,14 @@ const UIController = {
         if (cardDesc) {
             cardDesc.classList.add('has-walking');
             cardDesc.innerHTML = `
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/><path d="M16 17h4"/><path d="M4 13h4"/></svg>
+                ${WALKING_SVG}
                 <span class="walking-highlight">${walkDistanceStr} walk (${walkMins} min)</span>
             `;
+        }
+        // Also update the map marker popup
+        const marker = MapController.carMarkers.find(m => m.options.plate === car.plate);
+        if (marker) {
+            marker.setPopupContent(`<b>${car.brand} ${car.model}</b><br>${walkDistanceStr} walk (${walkMins} min)<br>Plate: ${car.plate}`);
         }
     },
 
