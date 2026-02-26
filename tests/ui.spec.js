@@ -36,6 +36,23 @@ test.describe('UI Responsive Regression Tests', () => {
         // Force the browser geometry to trigger mobile CSS media queries
         test.use({ viewport: { width: 400, height: 800 } });
 
+        test('Address autocomplete works on mobile viewport', async ({ page }) => {
+            await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify([
+                    { display_name: 'Montréal, Québec, Canada', lat: '45.5088', lon: '-73.5878' }
+                ])
+            }));
+
+            // Address input should be visible by default
+            await expect(page.locator('#address-input-wrapper')).toBeVisible();
+            await page.fill('#address-input', 'Montr');
+
+            // Suggestions should appear
+            await expect(page.locator('#address-suggestions')).not.toHaveClass(/hidden/, { timeout: 3000 });
+            await expect(page.locator('#address-suggestions li')).toHaveCount(1);
+        });
+
         test('Search form correctly collapses into floating pill when searching', async ({ page }) => {
             // Initially, without auto-geolocation, the app starts idle.
             // Form is visible, pill is hidden.
