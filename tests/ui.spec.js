@@ -196,7 +196,12 @@ test.describe('LocationController — Smart Location Widget', () => {
         await addCoverageReport(coverage, testInfo);
     });
 
-    test('GPS success: button turns blue and address input stays hidden', async ({ page }) => {
+    test('Address input is visible by default on load', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+        await expect(page.locator('#address-input-wrapper')).toBeVisible();
+    });
+
+    test('GPS success: button turns blue and address input hides', async ({ page }) => {
         await page.context().grantPermissions(['geolocation']);
         await page.context().setGeolocation({ latitude: 45.5017, longitude: -73.5673 });
         await page.goto('http://localhost:8000');
@@ -204,8 +209,7 @@ test.describe('LocationController — Smart Location Widget', () => {
         // Wait for LocationController to resolve GPS
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/, { timeout: 5000 });
 
-        // Label should confirm GPS found
-        // Address input wrapper must remain hidden
+        // GPS succeeded — address input is hidden
         await expect(page.locator('#address-input-wrapper')).toBeHidden();
 
         // Hidden location field must hold the resolved coordinates
@@ -213,22 +217,19 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(locValue).toMatch(/^45\.\d+,-73\.\d+$/);
     });
 
-    test('GPS error: button turns red and address input becomes visible', async ({ page }) => {
-        // No geolocation grant → permission stays 'denied'
+    test('GPS error: button turns red and address input stays visible', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
-        // Simulate GPS failure (permission denied path in LocationController)
+        // Simulate GPS failure
         await page.evaluate(() => LocationController.onGpsError());
 
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-error/);
+        // Address input was already visible and remains so
         await expect(page.locator('#address-input-wrapper')).toBeVisible();
     });
 
     test('Address autocomplete: typing shows Nominatim suggestions', async ({ page }) => {
         await page.goto('http://localhost:8000');
-
-        // Force the address input visible
-        await page.evaluate(() => LocationController.onGpsError());
 
         // Mock the Nominatim API so we don't hit the network
         await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
@@ -250,7 +251,6 @@ test.describe('LocationController — Smart Location Widget', () => {
 
     test('Address autocomplete: selecting a suggestion sets location and hides dropdown', async ({ page }) => {
         await page.goto('http://localhost:8000');
-        await page.evaluate(() => LocationController.onGpsError());
 
         await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
             contentType: 'application/json',
@@ -303,7 +303,6 @@ test.describe('LocationController — Smart Location Widget', () => {
 
     test('Address autocomplete: English address fires two parallel Nominatim requests', async ({ page }) => {
         await page.goto('http://localhost:8000');
-        await page.evaluate(() => LocationController.onGpsError());
 
         const capturedUrls = [];
         await page.route('**/nominatim.openstreetmap.org/**', route => {
@@ -331,7 +330,6 @@ test.describe('LocationController — Smart Location Widget', () => {
 
     test('Address autocomplete: postal code uses geocoder.ca for precise results', async ({ page }) => {
         await page.goto('http://localhost:8000');
-        await page.evaluate(() => LocationController.onGpsError());
 
         const capturedUrls = [];
         await page.route('**/geocoder.ca/**', route => {
@@ -363,7 +361,6 @@ test.describe('LocationController — Smart Location Widget', () => {
 
     test('Address cleared: GPS button reverts to red and location is reset', async ({ page }) => {
         await page.goto('http://localhost:8000');
-        await page.evaluate(() => LocationController.onGpsError());
 
         // Simulate selecting an address first (button turns blue)
         await page.evaluate(() => {

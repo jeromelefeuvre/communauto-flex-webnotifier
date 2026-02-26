@@ -39,8 +39,6 @@ const LocationController = {
     setIdle: function () {
         const btn = UIController.els.btnGeo;
         btn.className = 'geo-btn';
-
-        this.hideAddressInput();
     },
 
     setLoading: function () {
