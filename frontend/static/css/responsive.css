@@ -205,8 +205,4 @@
         font-size: 13px;
     }
 
-    /* ── Hide footer banner ── */
-    .app-banner {
-        display: none;
-    }
 }

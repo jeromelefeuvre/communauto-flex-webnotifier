@@ -36,6 +36,10 @@ test.describe('UI Responsive Regression Tests', () => {
         // Force the browser geometry to trigger mobile CSS media queries
         test.use({ viewport: { width: 400, height: 800 } });
 
+        test('App banner is visible on mobile', async ({ page }) => {
+            await expect(page.locator('.app-banner')).toBeVisible();
+        });
+
         test('Address autocomplete works on mobile viewport', async ({ page }) => {
             await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
                 contentType: 'application/json',
