@@ -195,8 +195,8 @@ test.describe('UI Responsive Regression Tests', () => {
             expect(overlayBox).not.toBeNull();
             expect(mapBox).not.toBeNull();
 
-            // Panel must be to the RIGHT of the map (panel left edge >= map right edge)
-            expect(overlayBox.x).toBeGreaterThanOrEqual(mapBox.x + mapBox.width - 1);
+            // Panel must be to the LEFT of the map (panel right edge <= map left edge)
+            expect(overlayBox.x + overlayBox.width).toBeLessThanOrEqual(mapBox.x + 1);
 
             // Both must share roughly the same top position (within 2px)
             expect(Math.abs(overlayBox.y - mapBox.y)).toBeLessThan(2);
