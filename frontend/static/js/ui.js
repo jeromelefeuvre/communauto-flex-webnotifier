@@ -120,12 +120,6 @@ const UIController = {
                         this.updateCarUIWithWalkingData(car, MathUtils.humanDistance(routeData.distance), Math.round(routeData.duration / 60));
                     }
                 });
-
-                // Also open the popup on the map for the associated marker
-                const marker = MapController.carMarkers.find(m => m.options.plate === plate);
-                if (marker) {
-                    marker.openPopup();
-                }
             });
         });
     },
@@ -138,11 +132,6 @@ const UIController = {
                 ${WALKING_SVG}
                 <span class="walking-highlight">${walkDistanceStr} walk (${walkMins} min)</span>
             `;
-        }
-        // Also update the map marker popup
-        const marker = MapController.carMarkers.find(m => m.options.plate === car.plate);
-        if (marker) {
-            marker.setPopupContent(`<b>${car.brand} ${car.model}</b><br>${walkDistanceStr} walk (${walkMins} min)<br>Plate: ${car.plate}`);
         }
     },
 

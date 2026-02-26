@@ -223,16 +223,11 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         const firstCar = page.locator('.car-card').nth(0);
         const secondCar = page.locator('.car-card').nth(1);
 
-        // No car is auto-selected initially (walking distances are fetched but no route drawn)
-        await expect(firstCar).not.toHaveClass(/selected/);
+        // First car is auto-selected and route is drawn automatically
+        await expect(firstCar).toHaveClass(/selected/, { timeout: 5000 });
         await expect(secondCar).not.toHaveClass(/selected/);
 
-        // Click the first car to select it and draw a route
-        await firstCar.click();
-        await expect(firstCar).toHaveClass(/selected/);
-        await expect(secondCar).not.toHaveClass(/selected/);
-
-        // Record the routed coordinate after clicking first car
+        // Walking route is drawn to the first car automatically
         await expect(async () => {
             const routedCoord = await page.evaluate(() => window.MapController.lastRoutedCoord);
             expect(routedCoord).toBe('45.556,-73.652');

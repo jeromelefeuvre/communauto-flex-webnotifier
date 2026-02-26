@@ -73,7 +73,6 @@ const MapController = {
 
         filteredCars.forEach(car => {
             const marker = L.marker([car.lat, car.lng], { icon: carIcon, plate: car.plate }).addTo(this.map);
-            marker.bindPopup(`<b>${car.brand} ${car.model}</b><br>Plate: ${car.plate}`);
 
             marker.on('click', () => {
                 this.drawRouteToCar(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(routeData => {

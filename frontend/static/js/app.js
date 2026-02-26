@@ -209,6 +209,12 @@ const AppController = {
                     });
                 });
 
+                // When only one car found, auto-select it to draw the walking route on the map
+                if (topCars.length >= 1) {
+                    const firstCard = document.querySelector('.car-card');
+                    if (firstCard) firstCard.click();
+                }
+
                 return;
             } else {
                 UIController.els.resultsContainer.innerHTML = ''; // Clear stale results
