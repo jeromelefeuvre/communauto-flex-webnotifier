@@ -26,5 +26,8 @@
     "monocart-reporter": "^2.10.0",
     "nyc": "^17.1.0",
     "playwright": "^1.58.2"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
   }
 }

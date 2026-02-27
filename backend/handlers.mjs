@@ -21,6 +21,18 @@ export const mimeTypes = {
     '.wasm': 'application/wasm'
 };
 
+export function readBody(req) {
+    return new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => data += chunk);
+        req.on('end', () => {
+            try { resolve(JSON.parse(data)); }
+            catch (e) { reject(new Error('Invalid JSON body')); }
+        });
+        req.on('error', reject);
+    });
+}
+
 export function handleApiProxy(requestUrl, res) {
     const targetUrl = new URL(requestUrl.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
     console.log(`[API] Proxying request to: ${targetUrl.href}`);

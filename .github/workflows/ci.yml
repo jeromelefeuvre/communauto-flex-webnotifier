@@ -28,7 +28,18 @@ jobs:
       
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-      
+
+    - name: Generate VAPID keys for CI
+      run: |
+        node -e "
+          const wp = require('web-push');
+          const keys = wp.generateVAPIDKeys();
+          const fs = require('fs');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'VAPID_PUBLIC_KEY=' + keys.publicKey + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'VAPID_PRIVATE_KEY=' + keys.privateKey + '\n');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'VAPID_SUBJECT=mailto:ci@example.com\n');
+        "
+
     - name: Run Playwright tests
       run: npm test
       

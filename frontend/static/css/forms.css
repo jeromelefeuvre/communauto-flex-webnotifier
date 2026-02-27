@@ -287,23 +287,11 @@ button[type="submit"],
     background-color: var(--danger-hover);
 }
 
-.secondary-btn {
-    width: 100%;
-    padding: 14px;
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 12px;
-}
-
-.secondary-btn:hover {
-    border-color: var(--text-secondary);
-    background-color: rgba(0, 0, 0, 0.02);
+.bg-alert-indicator {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent-color);
+    margin-left: 6px;
 }
 
 .icon-btn {

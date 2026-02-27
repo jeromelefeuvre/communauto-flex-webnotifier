@@ -130,6 +130,9 @@ UIController.els.form.addEventListener('submit', async (e) => {
     } else {
         executeSearch();
     }
+
+    // Fire-and-forget background push (safety net if user closes the app)
+    BackgroundAlert.subscribe();
 });
 
 UIController.els.btnStop.addEventListener('click', () => {
@@ -145,6 +148,7 @@ function stopSearch(message) {
     clearTimeout(AppState.searchTimeout);
 
     UIController.toggleStopped();
+    BackgroundAlert.unsubscribe();
 
     MapController.clearRoutes();
 
@@ -252,7 +256,75 @@ const AppController = {
     }
 };
 
+// ========== BACKGROUND ALERT (Web Push) ==========
+const BackgroundAlert = {
+    storageKey: 'bg_alert_id',
+
+    isActive: function () {
+        return !!localStorage.getItem(this.storageKey);
+    },
+
+    subscribe: async function () {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        if (!AppState.userLocation) return;
+
+        const city = UIController.els.city.value;
+        const radius = parseInt(UIController.els.distance.value);
+        const [lat, lng] = AppState.userLocation;
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            const keyRes = await fetch('api/push/vapid-public-key');
+            const { publicKey } = await keyRes.json();
+            if (!publicKey) return;
+
+            const sw = await navigator.serviceWorker.ready;
+            const pushSubscription = await sw.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: publicKey
+            });
+
+            const res = await fetch('api/push/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pushSubscription, city, lat, lng, radius })
+            });
+            const { id } = await res.json();
+            localStorage.setItem(this.storageKey, id);
+            this._showIndicator();
+            console.log('[BackgroundAlert] Subscribed:', id);
+        } catch (err) {
+            console.error('[BackgroundAlert] Subscribe error:', err.message);
+        }
+    },
+
+    unsubscribe: async function () {
+        const id = localStorage.getItem(this.storageKey);
+        if (id) {
+            fetch('api/push/unsubscribe', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            }).catch(() => { });
+        }
+        localStorage.removeItem(this.storageKey);
+        this._hideIndicator();
+        console.log('[BackgroundAlert] Unsubscribed');
+    },
+
+    _showIndicator: function () {
+        document.getElementById('bg-alert-indicator')?.classList.remove('hidden');
+    },
+
+    _hideIndicator: function () {
+        document.getElementById('bg-alert-indicator')?.classList.add('hidden');
+    }
+};
+
 // Expose internal controllers to global window for E2E testing
 window.AppState = AppState;
 window.MapController = MapController;
 window.UIController = UIController;
+window.BackgroundAlert = BackgroundAlert;

@@ -12,6 +12,24 @@ self.addEventListener('activate', event => {
     );
 });
 
+self.addEventListener('push', event => {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || 'Communauto Found!';
+    const options = {
+        body: data.body || '',
+        icon: data.icon || 'static/images/android-chrome-192x192.png',
+        requireInteraction: true,
+        data: { url: data.url || '/' }
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    const url = event.notification.data?.url || '/';
+    event.waitUntil(clients.openWindow(url));
+});
+
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 

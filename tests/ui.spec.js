@@ -237,6 +237,80 @@ test.describe('PWA', () => {
     });
 });
 
+test.describe('Background Alert (Web Push)', () => {
+    test.use({ viewport: { width: 400, height: 800 } });
+
+    test.beforeEach(async ({ page }) => {
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
+        await page.route('**/api/cars*', route => route.fulfill({ json: { d: { Vehicles: [] } } }));
+        await page.goto('http://localhost:8000');
+    });
+
+    test.afterEach(async ({ page }, testInfo) => {
+        const coverage = await page.coverage.stopJSCoverage();
+        await addCoverageReport(coverage, testInfo);
+    });
+
+    test('Bell indicator is hidden before search starts', async ({ page }) => {
+        await expect(page.locator('#bg-alert-indicator')).toHaveClass(/hidden/);
+    });
+
+    test('Bell indicator appears when _showIndicator is called', async ({ page }) => {
+        await page.evaluate(() => BackgroundAlert._showIndicator());
+        await expect(page.locator('#bg-alert-indicator')).not.toHaveClass(/hidden/);
+    });
+
+    test('Bell indicator hides when _hideIndicator is called', async ({ page }) => {
+        await page.evaluate(() => {
+            BackgroundAlert._showIndicator();
+            BackgroundAlert._hideIndicator();
+        });
+        await expect(page.locator('#bg-alert-indicator')).toHaveClass(/hidden/);
+    });
+
+    test('VAPID public key endpoint returns a non-empty string', async ({ page }) => {
+        const res = await page.request.get('http://localhost:8000/api/push/vapid-public-key');
+        expect(res.status()).toBe(200);
+        const body = await res.json();
+        expect(typeof body.publicKey).toBe('string');
+        expect(body.publicKey.length).toBeGreaterThan(0);
+    });
+
+    test('Subscribe endpoint returns an id', async ({ page }) => {
+        // Use a minimal fake push subscription object accepted by the server
+        const fakeSub = {
+            endpoint: 'https://fcm.googleapis.com/fcm/send/fake-endpoint',
+            keys: { p256dh: 'BPFD0j6EAuDOjFEL3VR1k8xCcNbqZ0OcYQfIBw5ys-0BzEIRivHxCMDOVMNFAOjrZfCN6Sd2OFAG6m5Axy7G2E=', auth: 'fakefakeauth1234' }
+        };
+        const res = await page.request.post('http://localhost:8000/api/push/subscribe', {
+            data: { pushSubscription: fakeSub, city: 'montreal', lat: 45.5017, lng: -73.5673, radius: 600 }
+        });
+        expect(res.status()).toBe(201);
+        const body = await res.json();
+        expect(typeof body.id).toBe('string');
+        expect(body.id.length).toBeGreaterThan(0);
+    });
+
+    test('Unsubscribe endpoint removes subscription', async ({ page }) => {
+        // Subscribe first
+        const fakeSub = {
+            endpoint: 'https://fcm.googleapis.com/fcm/send/fake-endpoint-2',
+            keys: { p256dh: 'BPFD0j6EAuDOjFEL3VR1k8xCcNbqZ0OcYQfIBw5ys-0BzEIRivHxCMDOVMNFAOjrZfCN6Sd2OFAG6m5Axy7G2E=', auth: 'fakefakeauth5678' }
+        };
+        const subRes = await page.request.post('http://localhost:8000/api/push/subscribe', {
+            data: { pushSubscription: fakeSub, city: 'montreal', lat: 45.5017, lng: -73.5673, radius: 600 }
+        });
+        const { id } = await subRes.json();
+
+        const unsubRes = await page.request.delete('http://localhost:8000/api/push/unsubscribe', {
+            data: { id }
+        });
+        expect(unsubRes.status()).toBe(200);
+        const body = await unsubRes.json();
+        expect(body.ok).toBe(true);
+    });
+});
+
 test.describe('LocationController — Smart Location Widget', () => {
 
     test.beforeEach(async ({ page }) => {
