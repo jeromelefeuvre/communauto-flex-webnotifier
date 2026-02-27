@@ -48,6 +48,10 @@ function fetchCars(branchId) {
     return new Promise((resolve, reject) => {
         const url = new URL(`/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles?BranchID=${branchId}&LanguageID=2`, 'https://www.reservauto.net');
         https.get(url, res => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                res.resume();
+                return reject(new Error(`Failed to fetch cars, status: ${res.statusCode}`));
+            }
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {

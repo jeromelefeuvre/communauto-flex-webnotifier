@@ -22,10 +22,20 @@ export const mimeTypes = {
 };
 
 export function readBody(req) {
+    const MAX_BODY_SIZE = 1e6; // 1 MB
     return new Promise((resolve, reject) => {
         let data = '';
-        req.on('data', chunk => data += chunk);
+        let bodySize = 0;
+        req.on('data', chunk => {
+            bodySize += chunk.length;
+            if (bodySize > MAX_BODY_SIZE) {
+                req.connection.destroy();
+                return reject(new Error('Request body too large'));
+            }
+            data += chunk;
+        });
         req.on('end', () => {
+            if (!data) return resolve({});
             try { resolve(JSON.parse(data)); }
             catch (e) { reject(new Error('Invalid JSON body')); }
         });

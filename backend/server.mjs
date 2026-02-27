@@ -1,16 +1,7 @@
+import 'dotenv/config';
 import http from 'http';
-import { readFileSync } from 'fs';
 import { handleApiProxy, handleVersionProxy, handleStaticFiles, readBody } from './handlers.mjs';
 import { initWebPush, addSubscription, removeSubscription } from './pushManager.mjs';
-
-// Load .env if present (dev mode)
-try {
-    const env = readFileSync('.env', 'utf8');
-    for (const line of env.split('\n')) {
-        const [key, ...rest] = line.split('=');
-        if (key && rest.length) process.env[key.trim()] = rest.join('=').trim();
-    }
-} catch { /* no .env file — rely on system env vars */ }
 
 const pushEnabled = initWebPush();
 const PORT = process.env.PORT || 8000;
@@ -50,7 +41,13 @@ const server = http.createServer(async (req, res) => {
         try {
             const body = await readBody(req);
             const { pushSubscription, city, lat, lng, radius } = body;
-            const id = addSubscription({ pushSubscription, city, lat: parseFloat(lat), lng: parseFloat(lng), radius: parseInt(radius) });
+            const parsedLat = parseFloat(lat);
+            const parsedLng = parseFloat(lng);
+            const parsedRadius = parseInt(radius, 10);
+            if (isNaN(parsedLat) || isNaN(parsedLng) || isNaN(parsedRadius)) {
+                throw new Error('Invalid lat, lng, or radius');
+            }
+            const id = addSubscription({ pushSubscription, city, lat: parsedLat, lng: parsedLng, radius: parsedRadius });
             res.writeHead(201, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ id }));
         } catch (err) {

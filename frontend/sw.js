@@ -1,6 +1,22 @@
 const CACHE_NAME = 'communauto-v1';
 
+const APP_SHELL = [
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/static/css/style.css',
+    '/static/js/config.js',
+    '/static/js/utils.js',
+    '/static/js/ui.js',
+    '/static/js/location.js',
+    '/static/js/map.js',
+    '/static/js/app.js'
+];
+
 self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
+    );
     self.skipWaiting();
 });
 
