@@ -243,23 +243,27 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .form-actions {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    min-width: 140px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 button[type="submit"],
 .danger-btn {
-    width: 100%;
-    padding: 10px 14px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
     border: none;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s;
-    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .primary-btn {
