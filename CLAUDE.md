@@ -6,6 +6,7 @@ These rules apply to all AI coding assistants (Claude, Gemini, Copilot, etc.) wo
 
 - **Never push or commit without explicit user permission.** You may write code and run tests, but always ask before running `git commit` or `git push`.
 - Never commit secrets, `.env`, or credential files.
+- **Never add `Co-Authored-By` trailers to commit messages.**
 
 ## Testing
 
