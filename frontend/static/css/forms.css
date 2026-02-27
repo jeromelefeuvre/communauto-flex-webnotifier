@@ -291,6 +291,44 @@ button[type="submit"],
     background-color: var(--danger-hover);
 }
 
+.city-indicator {
+    min-width: unset;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: flex-end;
+}
+
+.city-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.08);
+    white-space: nowrap;
+}
+
+.city-badge.city-error {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+    background: rgba(239, 68, 68, 0.08);
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+}
+
+.city-badge.shake {
+    animation: shake 0.4s ease;
+}
+
 .bg-alert-indicator {
     display: inline-flex;
     align-items: center;

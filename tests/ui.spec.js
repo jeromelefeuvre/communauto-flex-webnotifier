@@ -71,6 +71,7 @@ test.describe('UI Responsive Regression Tests', () => {
             // When searching begins, the form collapses into the floating pill
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
+                AppState.detectedCity = 'montreal';
                 document.getElementById('location').value = '45.5017,-73.5673';
                 document.getElementById('btn-start').disabled = false;
             });
@@ -98,6 +99,7 @@ test.describe('UI Responsive Regression Tests', () => {
             // Start search
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
+                AppState.detectedCity = 'montreal';
                 document.getElementById('location').value = '45.5017,-73.5673';
                 document.getElementById('btn-start').disabled = false;
             });
@@ -145,6 +147,7 @@ test.describe('UI Responsive Regression Tests', () => {
 
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
+                AppState.detectedCity = 'montreal';
                 document.getElementById('location').value = '45.5017,-73.5673';
                 document.getElementById('btn-start').disabled = false;
             });
@@ -181,6 +184,7 @@ test.describe('UI Responsive Regression Tests', () => {
 
             await page.evaluate(() => {
                 AppState.userLocation = [45.5017, -73.5673];
+                AppState.detectedCity = 'montreal';
                 document.getElementById('location').value = '45.5017,-73.5673';
                 document.getElementById('btn-start').disabled = false;
             });
@@ -342,6 +346,25 @@ test.describe('LocationController — Smart Location Widget', () => {
         // Hidden location field must hold the resolved coordinates
         const locValue = await page.evaluate(() => document.getElementById('location').value);
         expect(locValue).toMatch(/^45\.\d+,-73\.\d+$/);
+
+        // City badge must show detected city (Montreal bounds)
+        await expect(page.locator('#city-indicator')).not.toHaveClass(/hidden/);
+        await expect(page.locator('#city-badge')).toHaveText('Montreal');
+        const detectedCity = await page.evaluate(() => AppState.detectedCity);
+        expect(detectedCity).toBe('montreal');
+    });
+
+    test('GPS success: unsupported city shows error badge and disables start', async ({ page }) => {
+        await page.context().grantPermissions(['geolocation']);
+        // Paris, France — outside all supported city bounds
+        await page.context().setGeolocation({ latitude: 48.8566, longitude: 2.3522 });
+        await page.goto('http://localhost:8000');
+
+        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/, { timeout: 5000 });
+        await expect(page.locator('#city-badge')).toHaveClass(/city-error/);
+        await expect(page.locator('#btn-start')).toBeDisabled();
+        const detectedCity = await page.evaluate(() => AppState.detectedCity);
+        expect(detectedCity).toBeNull();
     });
 
     test('GPS error: button turns red and address input stays visible', async ({ page }) => {
@@ -406,6 +429,11 @@ test.describe('LocationController — Smart Location Widget', () => {
 
         // GPS button must switch to success state
         await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/);
+
+        // City must be detected and badge shown
+        const detectedCity = await page.evaluate(() => AppState.detectedCity);
+        expect(detectedCity).toBe('montreal');
+        await expect(page.locator('#city-badge')).toHaveText('Montreal');
     });
 
     test('_toFrenchQuery: English street types are converted to French', async ({ page }) => {

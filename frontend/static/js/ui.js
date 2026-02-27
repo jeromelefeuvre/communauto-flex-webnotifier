@@ -15,7 +15,8 @@ const UIController = {
         statusContainer: document.getElementById('status-container'),
         statusText: document.getElementById('status-text'),
         resultsContainer: document.getElementById('results-container'),
-        city: document.getElementById('city'),
+        cityIndicator: document.getElementById('city-indicator'),
+        cityBadge: document.getElementById('city-badge'),
         distance: document.getElementById('distance'),
         delay: document.getElementById('delay'),
         mapWrapper: document.getElementById('map-wrapper'),
@@ -37,7 +38,6 @@ const UIController = {
         this.els.resultsContainer.innerHTML = '';
         this.els.mapWrapper.classList.remove('hidden');
 
-        this.els.city.disabled = true;
         this.els.distance.disabled = true;
         this.els.delay.disabled = true;
         this.els.locationInput.disabled = true;
@@ -49,7 +49,6 @@ const UIController = {
         this.els.btnStop.classList.add('hidden');
         this.els.statusContainer.classList.add('hidden');
 
-        this.els.city.disabled = false;
         this.els.distance.disabled = false;
         this.els.delay.disabled = false;
         this.els.locationInput.disabled = false;
@@ -133,6 +132,25 @@ const UIController = {
                 <span class="walking-highlight">${walkDistanceStr} walk (${walkMins} min)</span>
             `;
         }
+    },
+
+    showDetectedCity: function (city) {
+        const label = city.charAt(0).toUpperCase() + city.slice(1);
+        this.els.cityBadge.textContent = label;
+        this.els.cityBadge.className = 'city-badge';
+        this.els.cityIndicator.classList.remove('hidden');
+    },
+
+    showCityError: function () {
+        this.els.cityBadge.textContent = 'Location not supported';
+        this.els.cityBadge.className = 'city-badge city-error';
+        this.els.cityIndicator.classList.remove('hidden');
+    },
+
+    clearCityIndicator: function () {
+        this.els.cityIndicator.classList.add('hidden');
+        this.els.cityBadge.textContent = '';
+        this.els.cityBadge.className = 'city-badge';
     },
 
     updateFilterText: function (city, radius) {
