@@ -81,3 +81,21 @@ The test framework will invisibly launch a headless browser, start the local ser
 
 The original idea and core concept for this project started with the excellent command-line tool built by Evert:
 [https://github.com/evert/communauto-car-notify](https://github.com/evert/communauto-car-notify)
+
+## 🔌 API Reference
+
+The app proxies the official Communauto vehicle availability endpoint:
+
+```
+GET https://www.reservauto.net/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles
+```
+
+| Parameter    | Description       | Values                               |
+|--------------|-------------------|--------------------------------------|
+| `BranchID`   | Type of search    | `1` = flex cars, `2` = station cars  |
+| `LanguageID` | Response language | `1` = English, `2` = French          |
+
+Example request:
+```
+/api/cars?BranchID=1&LanguageID=2
+```
