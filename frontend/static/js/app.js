@@ -241,7 +241,7 @@ const AppController = {
 
         const notification = new Notification(title, {
             body: body,
-            icon: 'https://communauto.com/wp-content/uploads/2021/03/cropped-favicon-32x32.png',
+            icon: 'static/images/favicon-32x32.png',
             requireInteraction: true
         });
 

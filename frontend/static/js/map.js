@@ -66,9 +66,8 @@ const MapController = {
 
         const carIcon = L.icon({
             iconUrl: 'static/images/pin-am.png',
-            iconSize: [20, 27],
-            iconAnchor: [18, 18],
-            popupAnchor: [0, -18]
+            iconAnchor: [10, 27],
+            popupAnchor: [0, -27]
         });
 
         filteredCars.forEach(car => {
