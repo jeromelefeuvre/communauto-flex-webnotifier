@@ -209,6 +209,34 @@ test.describe('UI Responsive Regression Tests', () => {
     });
 });
 
+test.describe('PWA', () => {
+
+    test.beforeEach(async ({ page }) => {
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
+        await page.route('**/api/cars*', async route => route.fulfill({ json: { d: { Vehicles: [] } } }));
+        await page.goto('http://localhost:8000');
+    });
+
+    test.afterEach(async ({ page }, testInfo) => {
+        const coverage = await page.coverage.stopJSCoverage();
+        await addCoverageReport(coverage, testInfo);
+    });
+
+    test('Manifest link is present in <head>', async ({ page }) => {
+        const href = await page.locator('link[rel="manifest"]').getAttribute('href');
+        expect(href).toContain('manifest.json');
+    });
+
+    test('Theme color meta tag is set', async ({ page }) => {
+        await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#3b82f6');
+    });
+
+    test('Browser supports service workers', async ({ page }) => {
+        const supported = await page.evaluate(() => 'serviceWorker' in navigator);
+        expect(supported).toBe(true);
+    });
+});
+
 test.describe('LocationController — Smart Location Widget', () => {
 
     test.beforeEach(async ({ page }) => {
