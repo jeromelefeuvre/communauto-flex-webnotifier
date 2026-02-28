@@ -28,79 +28,57 @@
                 <h1>Communauto Flex WebNotify</h1>
                 <p class="subtitle">Find your next ride instantly</p>
             </header>
+        </div>
 
-            <main>
-                <div id="floating-search-bar" class="floating-search-bar hidden">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <span id="floating-search-text">Montreal - 600m</span>
-                    <svg class="icon-filter" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <line x1="4" y1="21" x2="4" y2="14"></line>
-                        <line x1="4" y1="10" x2="4" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12" y2="3"></line>
-                        <line x1="20" y1="21" x2="20" y2="16"></line>
-                        <line x1="20" y1="12" x2="20" y2="3"></line>
-                        <line x1="1" y1="14" x2="7" y2="14"></line>
-                        <line x1="9" y1="8" x2="15" y2="8"></line>
-                        <line x1="17" y1="16" x2="23" y2="16"></line>
-                    </svg>
-                    <span id="bg-alert-indicator" class="bg-alert-indicator hidden" title="Background alert active">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        <main class="map-container" id="map-wrapper">
+            <div id="results-overlay" class="results-overlay">
+                <form id="notify-form">
+                    <button type="button" id="btn-filter" class="filter-btn" title="Adjust search radius">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
                         </svg>
-                    </span>
-                </div>
+                    </button>
 
-                <form id="notify-form" class="horizontal-form">
-                    <div id="form-inputs" class="form-inputs-row">
-                        <div id="city-indicator" class="form-group city-indicator hidden">
-                            <span id="city-badge" class="city-badge"></span>
-                        </div>
-
-                        <div class="form-group distance-group">
-                            <div class="distance-label-row">
-                                <label for="distance">Radius</label>
-                                <span id="distance-value">600m</span>
-                            </div>
-                            <input type="range" id="distance" name="distance" value="600" min="500" max="2000"
-                                step="100">
-                        </div>
-
-                        <div class="form-group hidden">
-                            <label for="delay" class="sr-only">Interval(s)</label>
-                            <input type="number" id="delay" name="delay" value="30" min="30" max="300"
-                                placeholder="15s">
-                        </div>
-
-                        <div class="form-group location-group">
-                            <div class="location-widget">
-                                <div id="address-input-wrapper" class="address-input-wrapper">
-                                    <input type="text" id="address-input" autocomplete="off"
-                                        placeholder="Enter an address…" spellcheck="false" />
-                                    <ul id="address-suggestions" class="address-suggestions hidden"></ul>
-                                </div>
-                                <button type="button" id="btn-geolocation" class="geo-btn" title="Use Current Location">
-                                    <svg id="geo-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                        <circle cx="12" cy="12" r="8"></circle>
-                                        <line x1="12" y1="2" x2="12" y2="6"></line>
-                                        <line x1="12" y1="18" x2="12" y2="22"></line>
-                                        <line x1="2" y1="12" x2="6" y2="12"></line>
-                                        <line x1="18" y1="12" x2="22" y2="12"></line>
-                                        <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
-                                    </svg>
-                                </button>
-                            </div>
-                            <!-- Hidden field stores the resolved coordinates for form submission -->
-                            <input type="hidden" id="location" name="location" value="">
-                        </div>
+                    <div id="city-indicator" class="city-indicator hidden">
+                        <span id="city-badge" class="city-badge"></span>
                     </div>
+
+                    <!-- Collapsed summary pill: shown when form-inputs is hidden (mobile search) -->
+                    <div id="floating-search-bar" class="floating-search-bar hidden">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span id="floating-search-text">Montreal - 600m</span>
+                        <svg class="icon-filter" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                        <span id="bg-alert-indicator" class="bg-alert-indicator hidden" title="Background alert active">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                            </svg>
+                        </span>
+                    </div>
+
                     <div class="form-actions">
                         <button type="submit" id="btn-start" class="primary-btn" disabled>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -115,12 +93,43 @@
                             </svg>
                         </button>
                     </div>
-                </form>
-            </main>
-        </div>
 
-        <div class="map-container hidden" id="map-wrapper">
-            <div id="results-overlay" class="results-overlay">
+                    <!-- Expandable inputs: collapses when searching starts -->
+                    <div id="form-inputs" class="form-inputs-col">
+                        <!-- Radius filter: toggled by filter button -->
+                        <div id="form-filters" class="form-row-2 hidden">
+                            <div class="form-group distance-group">
+                                <div class="distance-label-row">
+                                    <label for="distance">Radius</label>
+                                    <span id="distance-value">600m</span>
+                                </div>
+                                <input type="range" id="distance" name="distance" value="600" min="500" max="2000"
+                                    step="100">
+                            </div>
+                            <div class="form-group hidden">
+                                <label for="delay" class="sr-only">Interval(s)</label>
+                                <input type="number" id="delay" name="delay" value="30" min="30" max="300"
+                                    placeholder="15s">
+                            </div>
+                        </div>
+
+                        <!-- Address and GPS -->
+                        <div class="form-row-1">
+                            <div class="form-group location-group">
+                                <div class="location-widget">
+                                    <div id="address-input-wrapper" class="address-input-wrapper hidden">
+                                        <input type="text" id="address-input" autocomplete="off"
+                                            placeholder="Enter an address…" spellcheck="false" />
+                                        <ul id="address-suggestions" class="address-suggestions hidden"></ul>
+                                    </div>
+                                </div>
+                                <!-- Hidden field stores the resolved coordinates for form submission -->
+                                <input type="hidden" id="location" name="location" value="">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
                 <div id="status-container" class="status-container hidden">
                     <div class="loader"></div>
                     <p id="status-text">Initializing...</p>
@@ -131,9 +140,7 @@
                 </div>
             </div>
             <div id="map"></div>
-        </div>
-
-
+        </main>
     </div>
 
     <div id="app-banner" class="app-banner">

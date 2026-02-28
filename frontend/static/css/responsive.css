@@ -10,47 +10,32 @@
         display: none !important;
     }
 
-    .form-inputs-row.hidden {
+    #form-inputs.hidden {
         display: flex !important;
     }
 }
 
 /* Tablet & Smaller Desktop (Max Width: 900px) */
 @media (max-width: 900px) {
-    .layout-container {
-        flex-direction: column;
-        height: auto;
-        min-height: 100vh;
-    }
-
-    .top-bar-container {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
-        padding: 16px;
-    }
-
     header {
         text-align: center;
-        min-width: auto;
     }
 
-    .form-inputs-row {
+    .form-row-1 {
         flex-wrap: wrap;
     }
 
-    /* On small screens, collapse the sidebar into a stacked layout above the map */
+    /* On tablet, stack the sidebar above the map */
     .results-overlay {
         width: 100%;
         height: auto;
-        max-height: 300px;
+        max-height: 40vh;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
     }
 
     .map-container {
         flex-direction: column;
-        min-height: 500px;
         overflow-y: auto;
     }
 }
@@ -59,7 +44,6 @@
 @media (max-width: 480px) {
     .layout-container {
         padding: 0;
-        gap: 0;
         height: 100vh;
     }
 
@@ -67,29 +51,36 @@
         border-radius: 0;
         border: none;
         border-bottom: 1px solid var(--border-color);
-        padding: 10px;
-        gap: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        z-index: 10;
-        background: rgba(30, 41, 59, 0.95);
-        backdrop-filter: blur(10px);
+        padding: 8px 16px;
     }
 
-    .horizontal-form {
-        flex-wrap: wrap;
+    .map-container {
+        border-radius: 0;
+        border: none;
+        flex-direction: column;
+        flex-grow: 1;
+        min-height: 0;
     }
 
-    /* ── Two-column layout: City + Distance side-by-side ── */
-    .form-inputs-row {
+    /* ── Sidebar becomes a compact top panel ── */
+    .results-overlay {
+        width: 100%;
+        max-height: 45vh;
+        height: auto;
+        overflow-y: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        border-radius: 0;
+        flex-shrink: 0;
+    }
+
+    /* ── Compact row 1 ── */
+    .form-row-1 {
         gap: 6px;
     }
 
     .form-group {
         min-width: 0;
-    }
-
-    .form-group:first-child {
-        flex: 0 0 35%;
     }
 
     .distance-group {
@@ -112,44 +103,16 @@
 
     /* ── Compact form actions ── */
     .form-actions {
-        width: 100%;
+        width: auto;
         min-width: 0;
         margin-top: 0;
         flex-direction: row;
     }
 
-    .form-actions button {
-        width: 100%;
-        padding: 10px;
-    }
-
     /* ── Map fills remaining space ── */
-    .map-container {
-        border-radius: 0;
-        border: none;
-        min-height: calc(100vh - 200px);
-        position: relative;
-    }
-
-    /* ── Bottom-sheet results overlay ── */
-    .results-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 35vh;
-        height: auto;
-        overflow-y: auto;
-        border-right: none;
-        border-bottom: none;
-        border-top: 1px solid var(--border-color);
-        border-radius: 16px 16px 0 0;
-        background: rgba(30, 41, 59, 0.92);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
-        z-index: 20;
+    #map {
+        flex-grow: 1;
+        min-height: 200px;
     }
 
     .results-container {

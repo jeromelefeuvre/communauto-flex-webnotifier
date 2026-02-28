@@ -39,24 +39,6 @@ UIController.els.distance.addEventListener('input', (e) => {
     }
 });
 
-UIController.els.btnGeo.addEventListener('click', async () => {
-    if (UIController.els.btnGeo.disabled) return;
-    UIController.els.btnGeo.disabled = true;
-    LocationController.setLoading();
-    try {
-        const position = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
-        });
-        LocationController.onGpsSuccess(position);
-        // If location was found via button click, auto-start search
-        AppState.userLocation = [parseFloat(position.coords.latitude.toFixed(6)), parseFloat(position.coords.longitude.toFixed(6))];
-        UIController.els.btnStart.click();
-    } catch {
-        LocationController.onGpsError();
-    } finally {
-        UIController.els.btnGeo.disabled = false;
-    }
-});
 
 UIController.els.form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -152,6 +134,13 @@ UIController.els.floatingSearchBar.addEventListener('click', () => {
     UIController.expandForm();
 });
 
+document.getElementById('btn-filter').addEventListener('click', () => {
+    const filters = document.getElementById('form-filters');
+    const btn = document.getElementById('btn-filter');
+    filters.classList.toggle('hidden');
+    btn.classList.toggle('active');
+});
+
 function stopSearch(message) {
     AppState.isSearching = false;
     clearTimeout(AppState.searchTimeout);
@@ -203,7 +192,7 @@ const AppController = {
 
             MapController.drawCars(mapCars, city);
 
-            UIController.updateStatus(`${cars.length} cars found. ${alertCars.length} within ${MathUtils.humanDistance(AppState.currentDistanceRadius)} (${mapCars.length} map total). Waiting...`);
+            UIController.updateStatus(`${cars.length} cars found.\n${alertCars.length} within ${MathUtils.humanDistance(AppState.currentDistanceRadius)} (${mapCars.length} map total). Waiting...`);
 
             if (alertCars.length > 0) {
                 const topCars = alertCars.slice(0, 3); // Take up to 3 cars
