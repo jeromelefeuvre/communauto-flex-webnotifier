@@ -37,15 +37,10 @@ const LocationController = {
     },
 
     setIdle: function () {
-        const btn = UIController.els.btnGeo;
-        btn.className = 'geo-btn';
+        this.showAddressInput();
     },
 
-    setLoading: function () {
-        const btn = UIController.els.btnGeo;
-        btn.className = 'geo-btn';
-
-    },
+    setLoading: function () {},
 
     // Detects city from coordinates, updates AppState and city badge UI.
     // Returns the detected city string or null.
@@ -71,7 +66,6 @@ const LocationController = {
         if (typeof AppState !== 'undefined') {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
-        UIController.els.btnGeo.className = 'geo-btn geo-success';
 
         const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
 
@@ -83,8 +77,6 @@ const LocationController = {
 
     onGpsError: function () {
         UIController.els.locationInput.value = '';
-        UIController.els.btnGeo.className = 'geo-btn geo-error';
-
         this.showAddressInput();
     },
 
@@ -104,8 +96,6 @@ const LocationController = {
         clearTimeout(this._debounceTimer);
         const query = UIController.els.addressInput.value.trim();
         if (query.length === 0) {
-            // Field cleared — revert to error state so user knows no location is set
-            UIController.els.btnGeo.className = 'geo-btn geo-error';
             UIController.els.btnStart.disabled = true;
             UIController.els.locationInput.value = '';
             if (typeof AppState !== 'undefined') {
@@ -243,9 +233,7 @@ const LocationController = {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
 
-        const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
-        UIController.els.btnGeo.className = city ? 'geo-btn geo-success' : 'geo-btn geo-error';
-
+        this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
         this.hideSuggestions();
     },
 

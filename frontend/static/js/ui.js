@@ -6,8 +6,6 @@ const UIController = {
         form: document.getElementById('notify-form'),
         btnStart: document.getElementById('btn-start'),
         btnStop: document.getElementById('btn-stop'),
-        btnGeo: document.getElementById('btn-geolocation'),
-
         locationInput: document.getElementById('location'),
         addressWrapper: document.getElementById('address-input-wrapper'),
         addressInput: document.getElementById('address-input'),
@@ -36,12 +34,10 @@ const UIController = {
         this.els.floatingSearchBar.classList.remove('hidden');
 
         this.els.resultsContainer.innerHTML = '';
-        this.els.mapWrapper.classList.remove('hidden');
 
         this.els.distance.disabled = true;
         this.els.delay.disabled = true;
         this.els.locationInput.disabled = true;
-        this.els.btnGeo.disabled = true;
     },
 
     toggleStopped: function () {
@@ -52,7 +48,6 @@ const UIController = {
         this.els.distance.disabled = false;
         this.els.delay.disabled = false;
         this.els.locationInput.disabled = false;
-        this.els.btnGeo.disabled = false;
     },
 
     updateStatus: function (text) {

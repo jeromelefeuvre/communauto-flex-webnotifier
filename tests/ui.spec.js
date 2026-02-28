@@ -332,16 +332,13 @@ test.describe('LocationController — Smart Location Widget', () => {
         await expect(page.locator('#address-input-wrapper')).toBeVisible();
     });
 
-    test('GPS success: button turns blue and address input hides', async ({ page }) => {
+    test('GPS success: address input hides', async ({ page }) => {
         await page.context().grantPermissions(['geolocation']);
         await page.context().setGeolocation({ latitude: 45.5017, longitude: -73.5673 });
         await page.goto('http://localhost:8000');
 
-        // Wait for LocationController to resolve GPS
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/, { timeout: 5000 });
-
         // GPS succeeded — address input is hidden
-        await expect(page.locator('#address-input-wrapper')).toBeHidden();
+        await expect(page.locator('#address-input-wrapper')).toBeHidden({ timeout: 5000 });
 
         // Hidden location field must hold the resolved coordinates
         const locValue = await page.evaluate(() => document.getElementById('location').value);
@@ -360,20 +357,19 @@ test.describe('LocationController — Smart Location Widget', () => {
         await page.context().setGeolocation({ latitude: 48.8566, longitude: 2.3522 });
         await page.goto('http://localhost:8000');
 
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/, { timeout: 5000 });
+        await expect(page.locator('#city-indicator')).not.toHaveClass(/hidden/, { timeout: 5000 });
         await expect(page.locator('#city-badge')).toHaveClass(/city-error/);
         await expect(page.locator('#btn-start')).toBeDisabled();
         const detectedCity = await page.evaluate(() => AppState.detectedCity);
         expect(detectedCity).toBeNull();
     });
 
-    test('GPS error: button turns red and address input stays visible', async ({ page }) => {
+    test('GPS error: address input stays visible', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
         // Simulate GPS failure
         await page.evaluate(() => LocationController.onGpsError());
 
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-error/);
         // Address input was already visible and remains so
         await expect(page.locator('#address-input-wrapper')).toBeVisible();
     });
@@ -426,9 +422,6 @@ test.describe('LocationController — Smart Location Widget', () => {
         // Hidden #location field should also be updated
         const hiddenVal = await page.evaluate(() => document.getElementById('location').value);
         expect(hiddenVal).toBe('45.508800,-73.587800');
-
-        // GPS button must switch to success state
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/);
 
         // City must be detected and badge shown
         const detectedCity = await page.evaluate(() => AppState.detectedCity);
@@ -514,25 +507,20 @@ test.describe('LocationController — Smart Location Widget', () => {
         await expect(page.locator('#address-suggestions li').first()).toContainText('Montréal');
     });
 
-    test('Address cleared: GPS button reverts to red and location is reset', async ({ page }) => {
+    test('Address cleared: location is reset', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
-        // Simulate selecting an address first (button turns blue)
+        // Simulate selecting an address first
         await page.evaluate(() => {
             AppState.userLocation = [45.5088, -73.5878];
             document.getElementById('location').value = '45.508800,-73.587800';
-            UIController.els.btnGeo.className = 'geo-btn geo-success';
         });
-
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-success/);
 
         // Now clear the address input
         await page.fill('#address-input', '');
         // Trigger the input event manually (fill doesn't always fire it)
         await page.evaluate(() => UIController.els.addressInput.dispatchEvent(new Event('input')));
 
-        // Button must revert to red
-        await expect(page.locator('#btn-geolocation')).toHaveClass(/geo-error/);
         // Location must be cleared
         const loc = await page.evaluate(() => AppState.userLocation);
         expect(loc).toBeNull();

@@ -1,7 +1,6 @@
 .layout-container {
     display: flex;
     flex-direction: column;
-    gap: 16px;
     width: 100%;
     max-width: 1400px;
     justify-content: flex-start;
@@ -10,41 +9,26 @@
 
 .top-bar-container {
     background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border-color);
     width: 100%;
-    padding: 16px 24px;
-    border: 1px solid var(--border-color);
+    padding: 10px 24px;
     flex-shrink: 0;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 24px;
-}
-
-.top-bar-container main {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
 }
 
 header {
     text-align: left;
     flex-shrink: 0;
-    min-width: 250px;
 }
 
 .map-container {
     flex-grow: 1;
     background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     border: 1px solid var(--border-color);
+    border-top: none;
     overflow: hidden;
-    min-height: 500px;
     display: flex;
     flex-direction: row;
     /* side-by-side: panel | map */
@@ -52,7 +36,7 @@ header {
 
 #map {
     flex-grow: 1;
-    min-height: 500px;
+    min-height: 0;
     height: 100%;
     z-index: 1;
 }
