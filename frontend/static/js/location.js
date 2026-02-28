@@ -47,6 +47,22 @@ const LocationController = {
 
     },
 
+    // Detects city from coordinates, updates AppState and city badge UI.
+    // Returns the detected city string or null.
+    _applyDetectedCity: function (lat, lng) {
+        const city = detectCityFromCoords(lat, lng);
+        if (city) {
+            if (typeof AppState !== 'undefined') AppState.detectedCity = city;
+            UIController.showDetectedCity(city);
+            UIController.els.btnStart.disabled = false;
+        } else {
+            if (typeof AppState !== 'undefined') AppState.detectedCity = null;
+            UIController.showCityError();
+            UIController.els.btnStart.disabled = true;
+        }
+        return city;
+    },
+
     onGpsSuccess: function (position, autoStart = false) {
         const lat = position.coords.latitude.toFixed(6);
         const lng = position.coords.longitude.toFixed(6);
@@ -56,10 +72,11 @@ const LocationController = {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
         UIController.els.btnGeo.className = 'geo-btn geo-success';
-        UIController.els.btnStart.disabled = false;
+
+        const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
 
         this.hideAddressInput();
-        if (autoStart) {
+        if (autoStart && city) {
             UIController.els.btnStart.click();
         }
     },
@@ -91,7 +108,11 @@ const LocationController = {
             UIController.els.btnGeo.className = 'geo-btn geo-error';
             UIController.els.btnStart.disabled = true;
             UIController.els.locationInput.value = '';
-            if (typeof AppState !== 'undefined') AppState.userLocation = null;
+            if (typeof AppState !== 'undefined') {
+                AppState.userLocation = null;
+                AppState.detectedCity = null;
+            }
+            UIController.clearCityIndicator();
             this.hideSuggestions();
             return;
         }
@@ -139,7 +160,6 @@ const LocationController = {
     fetchSuggestions: async function (query) {
         try {
             const headers = { 'Accept-Language': 'fr,en' };
-            const city = UIController.els.city.selectedOptions[0].text;
 
             // Postal codes use geocoder.ca for precise neighborhood-level results
             const postalCode = this._parsePostalCode(query);
@@ -148,10 +168,10 @@ const LocationController = {
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.latt && data.longt) {
-                    const city_ = data.standard?.city || city;
+                    const city_ = data.standard?.city || '';
                     const prov = data.standard?.prov || '';
                     this.renderSuggestions([{
-                        display_name: `${postalCode}, ${city_}${prov ? ', ' + prov : ''}, Canada`,
+                        display_name: `${postalCode}${city_ ? ', ' + city_ : ''}${prov ? ', ' + prov : ''}, Canada`,
                         lat: data.latt,
                         lon: data.longt
                     }]);
@@ -161,10 +181,13 @@ const LocationController = {
                 return;
             }
 
-            // Append the selected city to improve results
-            const queryWithCity = query.toLowerCase().includes(city.toLowerCase())
-                ? query
-                : `${query}, ${city}`;
+            // Optionally append detected city to bias results toward the user's area
+            const detectedCityName = typeof AppState !== 'undefined' && AppState.detectedCity
+                ? AppState.detectedCity.charAt(0).toUpperCase() + AppState.detectedCity.slice(1)
+                : null;
+            const queryWithCity = detectedCityName && !query.toLowerCase().includes(detectedCityName.toLowerCase())
+                ? `${query}, ${detectedCityName}`
+                : query;
             const buildUrl = q =>
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&countrycodes=ca`;
 
@@ -219,9 +242,9 @@ const LocationController = {
         if (typeof AppState !== 'undefined') {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
-        // Switch button from red error state to blue success — address is now set
-        UIController.els.btnGeo.className = 'geo-btn geo-success';
-        UIController.els.btnStart.disabled = false;
+
+        const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
+        UIController.els.btnGeo.className = city ? 'geo-btn geo-success' : 'geo-btn geo-error';
 
         this.hideSuggestions();
     },

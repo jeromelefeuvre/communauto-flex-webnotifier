@@ -4,7 +4,8 @@ const AppState = {
     searchTimeout: null,
     currentDistanceRadius: 600,
     userLocation: null,
-    lastSearchLocation: null
+    lastSearchLocation: null,
+    detectedCity: null
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -67,7 +68,15 @@ UIController.els.form.addEventListener('submit', async (e) => {
         Notification.requestPermission().catch(() => { });
     }
 
-    const city = UIController.els.city.value;
+    const city = AppState.detectedCity;
+    if (!city) {
+        UIController.showCityError();
+        const badge = UIController.els.cityBadge;
+        badge.classList.remove('shake');
+        void badge.offsetWidth; // force reflow to restart animation
+        badge.classList.add('shake');
+        return;
+    }
     const initialDistance = parseInt(UIController.els.distance.value);
     const delay = parseInt(UIController.els.delay.value) * 1000;
     // AppState.userLocation is set by LocationController (via GPS or address selection).
@@ -280,7 +289,7 @@ const BackgroundAlert = {
         if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
         if (!AppState.userLocation) return;
 
-        const city = UIController.els.city.value;
+        const city = AppState.detectedCity;
         const radius = parseInt(UIController.els.distance.value);
         const [lat, lng] = AppState.userLocation;
 
