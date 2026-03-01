@@ -2,7 +2,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 
-const BASE_URL = (process.env.BASE_URL || '').replace(/\/$/, '');
+const BASE_URL = (process.env.BASE_URL && process.env.BASE_URL !== '/') ? ('/' + process.env.BASE_URL.replace(/^\/|\/$/g, '')) : '';
 const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg']);
 
 export const mimeTypes = {
