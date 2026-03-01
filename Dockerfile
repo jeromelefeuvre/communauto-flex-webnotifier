@@ -4,8 +4,11 @@ FROM node:20-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
+# Install production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts
+
 # Copy the server script and the frontend web files
-COPY package.json ./
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 
