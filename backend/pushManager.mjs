@@ -105,6 +105,13 @@ async function pollForCars(id) {
         }
     } catch (err) {
         console.error(`[PUSH] Poll error for ${id}:`, err.message);
+        // Fatal subscription errors (invalid keys, 404/410 gone): drop immediately
+        const isFatal = err.statusCode === 404 || err.statusCode === 410
+            || (err.message && err.message.includes('p256dh'));
+        if (isFatal) {
+            removeSubscription(id);
+            return;
+        }
     }
 
     if (subscriptions.has(id)) {
