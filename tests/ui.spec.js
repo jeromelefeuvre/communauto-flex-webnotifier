@@ -374,6 +374,27 @@ test.describe('LocationController — Smart Location Widget', () => {
         await expect(page.locator('#address-input-wrapper')).toBeVisible();
     });
 
+    test('GPS prompt: geolocation is requested automatically on page load', async ({ page }) => {
+        // Force 'prompt' state and intercept getCurrentPosition
+        await page.addInitScript(() => {
+            navigator.permissions.query = async (desc) =>
+                desc.name === 'geolocation' ? { state: 'prompt' } : { state: 'denied' };
+            navigator.geolocation.getCurrentPosition = (_success, error) => {
+                window.__gpsAutoRequested = true;
+                if (error) error({ code: 1, message: 'User denied' });
+            };
+        });
+
+        await page.goto('http://localhost:8000');
+
+        // getCurrentPosition must have been called without any user interaction
+        const wasRequested = await page.evaluate(() => window.__gpsAutoRequested === true);
+        expect(wasRequested).toBe(true);
+
+        // After denial, address input should fall back to visible
+        await expect(page.locator('#address-input-wrapper')).toBeVisible({ timeout: 3000 });
+    });
+
     test('Address autocomplete: typing shows Nominatim suggestions', async ({ page }) => {
         await page.goto('http://localhost:8000');
 

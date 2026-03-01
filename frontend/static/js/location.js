@@ -18,8 +18,12 @@ const LocationController = {
                 } else if (result.state === 'denied') {
                     this.onGpsError();
                 } else {
-                    // 'prompt' — wait for the user to click the button
-                    this.setIdle();
+                    // 'prompt' — ask automatically (no button to click anymore)
+                    this.setLoading();
+                    navigator.geolocation.getCurrentPosition(
+                        pos => this.onGpsSuccess(pos, true /* autoStart */),
+                        () => this.onGpsError()
+                    );
                 }
             });
         } else {
