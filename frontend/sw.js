@@ -1,15 +1,15 @@
 const CACHE_NAME = 'communauto-v1';
 
 const APP_SHELL = [
-    '/flex/',
-    '/flex/index.html',
-    '/flex/manifest.json',
-    '/flex/static/js/config.js',
-    '/flex/static/js/utils.js',
-    '/flex/static/js/ui.js',
-    '/flex/static/js/location.js',
-    '/flex/static/js/map.js',
-    '/flex/static/js/app.js'
+    '__BASE_URL__/',
+    '__BASE_URL__/index.html',
+    '__BASE_URL__/manifest.json',
+    '__BASE_URL__/static/js/config.js',
+    '__BASE_URL__/static/js/utils.js',
+    '__BASE_URL__/static/js/ui.js',
+    '__BASE_URL__/static/js/location.js',
+    '__BASE_URL__/static/js/map.js',
+    '__BASE_URL__/static/js/app.js'
 ];
 
 self.addEventListener('install', event => {
@@ -32,16 +32,16 @@ self.addEventListener('push', event => {
     const title = data.title || 'Communauto Found!';
     const options = {
         body: data.body || '',
-        icon: data.icon || '/flex/static/images/android-chrome-192x192.png',
+        icon: data.icon || '__BASE_URL__/static/images/android-chrome-192x192.png',
         requireInteraction: true,
-        data: { url: data.url || '/flex/' }
+        data: { url: data.url || '__BASE_URL__/' }
     };
     event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', event => {
     event.notification.close();
-    const url = event.notification.data?.url || '/flex/';
+    const url = event.notification.data?.url || '__BASE_URL__/';
     event.waitUntil(clients.openWindow(url));
 });
 
@@ -52,7 +52,7 @@ self.addEventListener('fetch', event => {
     if (url.origin !== self.location.origin) return;
 
     // Let API calls go straight to the network
-    if (url.pathname.startsWith('/flex/api/')) return;
+    if (url.pathname.startsWith('__BASE_URL__/api/')) return;
 
     // Stale-while-revalidate for everything else
     event.respondWith(

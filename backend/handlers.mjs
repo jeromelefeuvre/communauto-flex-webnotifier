@@ -2,6 +2,9 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 
+const BASE_URL = (process.env.BASE_URL && process.env.BASE_URL !== '/') ? ('/' + process.env.BASE_URL.replace(/^\/|\/$/g, '')) : '';
+const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg']);
+
 export const mimeTypes = {
     '.html': 'text/html',
     '.js': 'text/javascript',
@@ -98,26 +101,30 @@ export function handleStaticFiles(requestUrl, res) {
         } else {
             res.writeHead(200, { 'Content-Type': contentType });
 
-            if (filePath === './frontend/index.html') {
-                let html = content.toString('utf-8');
-                let version = 'unknown';
-                try {
-                    const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-                    version = pkg.version;
-                } catch (e) { }
+            if (TEXT_EXTENSIONS.has(extname)) {
+                let text = content.toString('utf-8');
+                text = text.replaceAll('__BASE_URL__', BASE_URL);
 
-                // Dynamically cache-bust main static assets based on package version
-                html = html.replace(/href="static\/css\/style\.css"/g, `href="static/css/style.css?v=${version}"`);
-                html = html.replace(/src="static\/js\/config\.js"/g, `src="static/js/config.js?v=${version}"`);
-                html = html.replace(/src="static\/js\/utils\.js"/g, `src="static/js/utils.js?v=${version}"`);
-                html = html.replace(/src="static\/js\/ui\.js"/g, `src="static/js/ui.js?v=${version}"`);
-                html = html.replace(/src="static\/js\/map\.js"/g, `src="static/js/map.js?v=${version}"`);
-                html = html.replace(/src="static\/js\/app\.js"/g, `src="static/js/app.js?v=${version}"`);
+                if (filePath === './frontend/index.html') {
+                    let version = 'unknown';
+                    try {
+                        const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+                        version = pkg.version;
+                    } catch (e) { }
 
-                return res.end(html);
+                    // Dynamically cache-bust main static assets based on package version
+                    text = text.replace(/href="static\/css\/style\.css"/g, `href="static/css/style.css?v=${version}"`);
+                    text = text.replace(/src="static\/js\/config\.js"/g, `src="static/js/config.js?v=${version}"`);
+                    text = text.replace(/src="static\/js\/utils\.js"/g, `src="static/js/utils.js?v=${version}"`);
+                    text = text.replace(/src="static\/js\/ui\.js"/g, `src="static/js/ui.js?v=${version}"`);
+                    text = text.replace(/src="static\/js\/map\.js"/g, `src="static/js/map.js?v=${version}"`);
+                    text = text.replace(/src="static\/js\/app\.js"/g, `src="static/js/app.js?v=${version}"`);
+                }
+
+                return res.end(text);
             }
 
-            res.end(content, 'utf-8');
+            res.end(content);
         }
     });
 }

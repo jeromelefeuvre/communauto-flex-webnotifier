@@ -7,7 +7,7 @@
     <title>Communauto Flex Car Notify</title>
     <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicon-32x32.png">
     <link rel="apple-touch-icon" href="static/images/apple-touch-icon.png">
-    <link rel="manifest" href="/flex/manifest.json">
+    <link rel="manifest" href="__BASE_URL__/manifest.json">
     <meta name="theme-color" content="#3b82f6">
     <meta name="description" content="Find the closest Communauto cars to your location seamlessly.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -166,7 +166,7 @@
     <script src="static/js/app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('/flex/sw.js', { scope: '/flex/' }));
+            window.addEventListener('load', () => navigator.serviceWorker.register('__BASE_URL__/sw.js', { scope: '__BASE_URL__/' }));
         }
     </script>
 </body>
