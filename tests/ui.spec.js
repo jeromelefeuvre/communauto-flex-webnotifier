@@ -231,24 +231,34 @@ test.describe('Search Results', () => {
         expect(text).toMatch(/^~/);
     });
 
-    test('Notification does not crash when new Notification() throws (Android behaviour)', async ({ page }) => {
+    test('Notification uses SW showNotification on Android (new Notification() throws)', async ({ page }) => {
         await page.route('**/routing.openstreetmap.de/**', route => route.fulfill({
             json: { routes: [{ distance: 300, duration: 220 }] }
         }));
 
-        // Simulate Android Chrome: new Notification() throws, only SW path is valid.
-        // Note: navigator.serviceWorker is a non-configurable native property in Chromium,
-        // so we can only verify the try/catch prevents an uncaught error (no crash).
-        await page.addInitScript(() => {
+        // Simulate Android Chrome: new Notification() throws.
+        // Patch ServiceWorkerContainer.prototype so controller is truthy and ready resolves
+        // with a spy — no real SW needed. Then verify sw.showNotification() is called.
+        await page.evaluate(() => {
+            window.swShowNotificationCalled = false;
+            // Override controller getter on the prototype so the SW branch is taken
+            Object.defineProperty(ServiceWorkerContainer.prototype, 'controller', {
+                configurable: true,
+                get: () => ({ scriptURL: 'mock' })
+            });
+            // Override ready to resolve with a spy registration
+            Object.defineProperty(ServiceWorkerContainer.prototype, 'ready', {
+                configurable: true,
+                get: () => Promise.resolve({
+                    showNotification: () => { window.swShowNotificationCalled = true; }
+                })
+            });
             window.Notification = class {
                 constructor() { throw new TypeError('Illegal constructor. Use ServiceWorkerRegistration.showNotification() instead.'); }
-                // Hardcode 'granted' so the permission guard in sendDesktopNotification passes
                 static get permission() { return 'granted'; }
                 static requestPermission() { return Promise.resolve('granted'); }
             };
         });
-
-        await page.goto('http://localhost:8000');
 
         const pageErrors = [];
         page.on('pageerror', err => pageErrors.push(err.message));
@@ -262,12 +272,12 @@ test.describe('Search Results', () => {
         await page.click('#btn-start');
 
         await expect(page.locator('.car-card')).toBeVisible({ timeout: 5000 });
-        // btn-stop hidden means stopSearch() ran (called right after sendDesktopNotification)
         await expect(page.locator('#btn-stop')).toHaveClass(/hidden/, { timeout: 2000 });
-        // Flush the task queue so the async fire-and-forget notification code completes
         await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
 
-        // No uncaught notification error should crash the page
+        // SW showNotification must have been called (not the throwing Notification constructor)
+        const wasSwCalled = await page.evaluate(() => window.swShowNotificationCalled);
+        expect(wasSwCalled).toBe(true);
         const notifyErrors = pageErrors.filter(m => m.includes('Notification') || m.includes('showNotification'));
         expect(notifyErrors).toHaveLength(0);
     });
