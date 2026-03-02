@@ -240,15 +240,14 @@ test.describe('Search Results', () => {
         // Note: navigator.serviceWorker is a non-configurable native property in Chromium,
         // so we can only verify the try/catch prevents an uncaught error (no crash).
         await page.addInitScript(() => {
-            const OrigNotification = window.Notification;
             window.Notification = class {
                 constructor() { throw new TypeError('Illegal constructor. Use ServiceWorkerRegistration.showNotification() instead.'); }
-                static get permission() { return OrigNotification.permission; }
-                static requestPermission(...args) { return OrigNotification.requestPermission(...args); }
+                // Hardcode 'granted' so the permission guard in sendDesktopNotification passes
+                static get permission() { return 'granted'; }
+                static requestPermission() { return Promise.resolve('granted'); }
             };
         });
 
-        await page.context().grantPermissions(['notifications']);
         await page.goto('http://localhost:8000');
 
         const pageErrors = [];
@@ -263,9 +262,12 @@ test.describe('Search Results', () => {
         await page.click('#btn-start');
 
         await expect(page.locator('.car-card')).toBeVisible({ timeout: 5000 });
-        await page.waitForTimeout(300);
+        // btn-stop hidden means stopSearch() ran (called right after sendDesktopNotification)
+        await expect(page.locator('#btn-stop')).toHaveClass(/hidden/, { timeout: 2000 });
+        // Flush the task queue so the async fire-and-forget notification code completes
+        await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
 
-        // Car results must appear and no uncaught notification error should crash the page
+        // No uncaught notification error should crash the page
         const notifyErrors = pageErrors.filter(m => m.includes('Notification') || m.includes('showNotification'));
         expect(notifyErrors).toHaveLength(0);
     });
