@@ -73,20 +73,28 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex WebNotify');
         // Map wrapper is only visible after a search is initiated
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await page.click('#btn-start');
         await expect(page.locator('#map-wrapper')).toBeVisible({ timeout: 10000 });
         await expect(page.locator('#map')).toBeVisible();
     });
 
-    test('Auto-geolocation on load works', async ({ page }) => {
-        // Because permissions are granted in beforeEach, LocationController auto-fetches
-        // and writes coordinates to the hidden #location field.
-        await expect(page.locator('#btn-stop')).toBeVisible({ timeout: 10000 });
+    test('GPS sets location and enables start button — no auto-search', async ({ page }) => {
+        // GPS resolves coordinates, enables the button, but does NOT auto-start the search
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
         const locValue = await page.evaluate(() => document.getElementById('location').value);
         expect(locValue).toBe('45.549831,-73.652279');
+        // Search must NOT have started automatically
+        await expect(page.locator('#btn-stop')).toHaveClass(/hidden/);
     });
 
     test('Start and Stop Search toggle works', async ({ page }) => {
-        // Stop the auto-search
+        // Wait for GPS to enable the start button, then start
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await page.click('#btn-start');
+        await expect(page.locator('#status-container')).toBeVisible();
+
+        // Stop the search
         await page.click('#btn-stop');
         await expect(page.locator('#status-container')).toBeHidden();
 
@@ -96,6 +104,9 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     });
 
     test('Map interacts and draws cars', async ({ page }) => {
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await page.click('#btn-start');
+
         // Wait for the fetch cycle to complete and map to populate
         await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
 
@@ -112,6 +123,9 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     });
 
     test('Map does not zoom out to whole world on first search', async ({ page }) => {
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await page.click('#btn-start');
+
         // Wait for the fetch cycle to complete and map to populate on initial load
         await expect(page.locator('#status-text')).toContainText('Waiting...', { timeout: 15000 });
 
@@ -125,7 +139,8 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     });
 
     test('Map circle radius dynamically updates and zooms to fit bounds on drag', async ({ page }) => {
-        // Wait for the app to load and auto-search to start
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await page.click('#btn-start');
         await expect(page.locator('#btn-stop')).toBeVisible();
         await page.click('#btn-stop');
         await page.waitForSelector('#btn-start', { state: 'visible' });
@@ -160,20 +175,7 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     });
 
     test('UI Search radius remains unchanged when a car is found', async ({ page }) => {
-        // Wait for the app to load and auto-search to start
-        await expect(page.locator('#btn-stop')).toBeVisible();
-        await page.click('#btn-stop');
-        await expect(page.locator('#btn-start')).toBeVisible();
-        await page.waitForTimeout(500); // Give app.js a tick to clear searchLoop timeouts
-
-        // Expand the UI form to assert the preserved values (or to change them)
-        // Note: btn-modify-search is only visible after a successful search, not after manual stop on fresh load.
-        // Wait, on fresh load, no cars are found yet, so form is not actually collapsed.
-
-        // Let's verify if the form is already expanded or we need to click.
-        // Since we just stopped the initial auto-search, the form should already be visible.
-
-        // We must expand the sleek UI to access the input
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
 
         // Change distance to 800m to include the car via simulated slider drag
         await page.evaluate(() => {
@@ -186,8 +188,6 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // The mock API returns 3 cars at ~680-710m away.
         // It should find the cars, show them all, and stop searching, but NOT shrink the radius.
         await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
-
-        // Now cars are found, the form IS collapsed. We must click modify to read distance.
 
         // The visible value should remain 800
         const visibleValue = await page.evaluate(() => document.getElementById('distance').value);
@@ -202,12 +202,9 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         // Ensure search has dynamically stopped (Start button is visible again)
         await expect(page.locator('#btn-start')).toBeVisible();
     });
+
     test('Clicking a car card updates the map route and selection state', async ({ page }) => {
-        // Wait for the app to load and auto-search to start
-        await expect(page.locator('#btn-stop')).toBeVisible();
-        await page.click('#btn-stop');
-        await expect(page.locator('#btn-start')).toBeVisible();
-        await page.waitForTimeout(500); // Give app.js a tick to clear searchLoop timeouts
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
 
         // Change distance to 800m to include the cars via simulated slider drag
         await page.evaluate(() => {

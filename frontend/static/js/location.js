@@ -12,16 +12,16 @@ const LocationController = {
                 if (result.state === 'granted') {
                     this.setLoading();
                     navigator.geolocation.getCurrentPosition(
-                        pos => this.onGpsSuccess(pos, true /* autoStart */),
+                        pos => this.onGpsSuccess(pos),
                         () => this.onGpsError()
                     );
                 } else if (result.state === 'denied') {
                     this.onGpsError();
                 } else {
-                    // 'prompt' — ask automatically (no button to click anymore)
+                    // 'prompt' — ask for permission; user still clicks Search to start
                     this.setLoading();
                     navigator.geolocation.getCurrentPosition(
-                        pos => this.onGpsSuccess(pos, true /* autoStart */),
+                        pos => this.onGpsSuccess(pos),
                         () => this.onGpsError()
                     );
                 }

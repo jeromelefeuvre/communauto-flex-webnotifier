@@ -558,6 +558,19 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(detectedCity).toBe('montreal');
     });
 
+    test('GPS success: search does NOT auto-start — user must click Start', async ({ page }) => {
+        await page.context().grantPermissions(['geolocation']);
+        await page.context().setGeolocation({ latitude: 45.5017, longitude: -73.5673 });
+        await page.goto('http://localhost:8000');
+
+        // GPS sets location and enables the button
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+
+        // Search must NOT have started automatically
+        await expect(page.locator('#btn-stop')).toHaveClass(/hidden/);
+        await expect(page.locator('#status-container')).toBeHidden();
+    });
+
     test('GPS success: unsupported city shows error badge and disables start', async ({ page }) => {
         await page.context().grantPermissions(['geolocation']);
         // Paris, France — outside all supported city bounds
