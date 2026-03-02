@@ -236,9 +236,10 @@ test.describe('Search Results', () => {
             json: { routes: [{ distance: 300, duration: 220 }] }
         }));
 
-        // Simulate Android Chrome: new Notification() throws, only SW path is valid
+        // Simulate Android Chrome: new Notification() throws, only SW path is valid.
+        // Note: navigator.serviceWorker is a non-configurable native property in Chromium,
+        // so we can only verify the try/catch prevents an uncaught error (no crash).
         await page.addInitScript(() => {
-            window.__notifyError = null;
             const OrigNotification = window.Notification;
             window.Notification = class {
                 constructor() { throw new TypeError('Illegal constructor. Use ServiceWorkerRegistration.showNotification() instead.'); }
@@ -250,7 +251,6 @@ test.describe('Search Results', () => {
         await page.context().grantPermissions(['notifications']);
         await page.goto('http://localhost:8000');
 
-        // Catch any uncaught page errors triggered by the notification code
         const pageErrors = [];
         page.on('pageerror', err => pageErrors.push(err.message));
 
