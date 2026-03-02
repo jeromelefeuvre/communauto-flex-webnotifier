@@ -72,11 +72,23 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
     test('UI Loads correctly', async ({ page }) => {
         await expect(page).toHaveTitle(/Communauto/);
         await expect(page.locator('h1')).toHaveText('Communauto Flex WebNotify');
-        // Map wrapper is only visible after a search is initiated
         await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
-        await page.click('#btn-start');
-        await expect(page.locator('#map-wrapper')).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('#map-wrapper')).toBeVisible();
         await expect(page.locator('#map')).toBeVisible();
+    });
+
+    test('Map preview shows as soon as GPS resolves — before search starts', async ({ page }) => {
+        // GPS resolves location → map initializes immediately without starting a search
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+        await expect(page.locator('#btn-stop')).toHaveClass(/hidden/);
+
+        // Leaflet must have been initialised (user marker + search circle drawn)
+        const hasMap = await page.evaluate(() => !!window.MapController.map);
+        expect(hasMap).toBe(true);
+        const markers = page.locator('.leaflet-marker-icon');
+        await expect(markers.first()).toBeVisible({ timeout: 5000 });
+        const paths = page.locator('.leaflet-interactive');
+        await expect(paths.first()).toBeVisible({ timeout: 5000 });
     });
 
     test('GPS sets location and enables start button — no auto-search', async ({ page }) => {

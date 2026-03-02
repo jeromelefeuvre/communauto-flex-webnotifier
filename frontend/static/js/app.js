@@ -1,5 +1,4 @@
 const AppState = {
-    isFirstInitEvent: true,
     isSearching: false,
     searchTimeout: null,
     currentDistanceRadius: 600,
@@ -79,8 +78,9 @@ UIController.els.form.addEventListener('submit', async (e) => {
     UIController.toggleSearching();
 
     let shouldFitBounds = false;
+    const mapWasJustCreated = !MapController.map;
 
-    if (!MapController.map) {
+    if (mapWasJustCreated) {
         MapController.init(AppState.userLocation[0], AppState.userLocation[1]);
         // Map is newly created, we definitely must fit bounds, but ONLY after invalidated.
         shouldFitBounds = true;
@@ -114,8 +114,7 @@ UIController.els.form.addEventListener('submit', async (e) => {
         AppController.searchLoop(city, delay);
     };
 
-    if (AppState.isFirstInitEvent) {
-        AppState.isFirstInitEvent = false;
+    if (mapWasJustCreated) {
         setTimeout(executeSearch, 100);
     } else {
         executeSearch();

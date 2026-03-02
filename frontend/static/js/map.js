@@ -16,6 +16,25 @@ const MapController = {
         return { padding: [20, 20] };
     },
 
+    // Shows the map immediately with just the user location and search circle,
+    // before any search has started. Safe to call multiple times — updates
+    // center if map is already initialized.
+    initPreview: function (lat, lng) {
+        if (!this.map) {
+            this.init(lat, lng);
+        } else {
+            this.updateCenter(lat, lng, false);
+        }
+        setTimeout(() => {
+            if (this.map) {
+                this.map.invalidateSize();
+                if (this.searchCircle) {
+                    this.map.fitBounds(this.searchCircle.getBounds(), this.getFitPadding());
+                }
+            }
+        }, 100);
+    },
+
     init: function (lat, lng) {
         if (this.map) return;
         this.map = L.map('map', { zoomControl: false }).setView([lat, lng], 14);

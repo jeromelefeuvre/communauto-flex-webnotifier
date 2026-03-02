@@ -74,6 +74,7 @@ const LocationController = {
         const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
 
         this.hideAddressInput();
+        if (city) MapController.initPreview(parseFloat(lat), parseFloat(lng));
         if (autoStart && city) {
             UIController.els.btnStart.click();
         }
@@ -237,7 +238,8 @@ const LocationController = {
             AppState.userLocation = [parseFloat(lat), parseFloat(lng)];
         }
 
-        this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
+        const city = this._applyDetectedCity(parseFloat(lat), parseFloat(lng));
+        if (city) MapController.initPreview(parseFloat(lat), parseFloat(lng));
         this.hideSuggestions();
     },
 
