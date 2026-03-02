@@ -253,7 +253,7 @@ const AppController = {
                 sw.showNotification(title, options);
             } else {
                 const notification = new Notification(title, options);
-                notification.onclick = () => { window.open(getBookingUrl(city), '_blank'); notification.close(); };
+                notification.onclick = () => { window.open(notification.data.url, '_blank'); notification.close(); };
             }
         } catch (e) {
             console.warn('[Notify] Notification failed:', e);
