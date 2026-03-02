@@ -121,8 +121,13 @@ UIController.els.form.addEventListener('submit', async (e) => {
         executeSearch();
     }
 
-    // Fire-and-forget background push (safety net if user closes the app)
-    BackgroundAlert.subscribe();
+    // Subscribe to background push only when the page becomes hidden (tab switched / app
+    // backgrounded). This prevents a duplicate notification when both the frontend and the
+    // backend find a car at the same time while the user is actively watching the page.
+    if (document.hidden) {
+        BackgroundAlert.subscribe();
+    }
+    document.addEventListener('visibilitychange', onSearchVisibilityChange);
 });
 
 UIController.els.btnStop.addEventListener('click', () => {
@@ -136,9 +141,22 @@ document.getElementById('btn-filter').addEventListener('click', () => {
     btn.classList.toggle('active');
 });
 
+function onSearchVisibilityChange() {
+    if (!AppState.isSearching) {
+        document.removeEventListener('visibilitychange', onSearchVisibilityChange);
+        return;
+    }
+    if (document.hidden) {
+        if (!BackgroundAlert.isActive()) BackgroundAlert.subscribe();
+    } else {
+        BackgroundAlert.unsubscribe();
+    }
+}
+
 function stopSearch(message) {
     AppState.isSearching = false;
     clearTimeout(AppState.searchTimeout);
+    document.removeEventListener('visibilitychange', onSearchVisibilityChange);
 
     UIController.toggleStopped();
     BackgroundAlert.unsubscribe();

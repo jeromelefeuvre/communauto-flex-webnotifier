@@ -281,6 +281,55 @@ test.describe('Search Results', () => {
         const notifyErrors = pageErrors.filter(m => m.includes('Notification') || m.includes('showNotification'));
         expect(notifyErrors).toHaveLength(0);
     });
+
+    test('Exactly one notification is shown when car found with page visible (no duplicate from background push)', async ({ page }) => {
+        await page.route('**/routing.openstreetmap.de/**', route => route.fulfill({
+            json: { routes: [{ distance: 300, duration: 220 }] }
+        }));
+
+        // Count every SW showNotification call (the only notification channel used)
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+            window.notificationCount = 0;
+            Object.defineProperty(ServiceWorkerContainer.prototype, 'controller', {
+                configurable: true, get: () => ({ scriptURL: 'mock' })
+            });
+            Object.defineProperty(ServiceWorkerContainer.prototype, 'ready', {
+                configurable: true,
+                get: () => Promise.resolve({
+                    showNotification: () => { window.notificationCount++; }
+                })
+            });
+            // Simulate what the old code did: background push subscribe fires immediately,
+            // causing the backend to also send a notification. With the fix, this mock
+            // should never be called while the page is visible.
+            BackgroundAlert.subscribe = async function () {
+                // If called while visible, it would trigger a second notification via push.
+                window.notificationCount++;
+            };
+            window.Notification = class {
+                constructor() { window.notificationCount++; }
+                static get permission() { return 'granted'; }
+                static requestPermission() { return Promise.resolve('granted'); }
+            };
+        });
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+
+        await expect(page.locator('.car-card')).toBeVisible({ timeout: 5000 });
+        await expect(page.locator('#btn-stop')).toHaveClass(/hidden/, { timeout: 2000 });
+        await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
+
+        // Must be exactly 1 — not 2 (which would mean background push also fired)
+        const count = await page.evaluate(() => window.notificationCount);
+        expect(count).toBe(1);
+    });
 });
 
 test.describe('PWA', () => {
@@ -382,6 +431,94 @@ test.describe('Background Alert (Web Push)', () => {
         expect(unsubRes.status()).toBe(200);
         const body = await unsubRes.json();
         expect(body.ok).toBe(true);
+    });
+
+    test('Background push is NOT subscribed immediately when page is visible at search start', async ({ page }) => {
+        await page.evaluate(() => {
+            // Ensure page appears visible
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+            window.__subscribeCalled = false;
+            BackgroundAlert.subscribe = async function () { window.__subscribeCalled = true; };
+        });
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+        await page.evaluate(() => new Promise(r => setTimeout(r, 0)));
+
+        const called = await page.evaluate(() => window.__subscribeCalled);
+        expect(called).toBe(false);
+    });
+
+    test('Background push subscribes when page becomes hidden during search', async ({ page }) => {
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+            window.__subscribeCalled = false;
+            BackgroundAlert.subscribe = async function () { window.__subscribeCalled = true; };
+        });
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+
+        // Simulate tab going to background
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+            document.dispatchEvent(new Event('visibilitychange'));
+        });
+        await page.evaluate(() => new Promise(r => setTimeout(r, 0)));
+
+        const called = await page.evaluate(() => window.__subscribeCalled);
+        expect(called).toBe(true);
+    });
+
+    test('Background push unsubscribes when page becomes visible again during search', async ({ page }) => {
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+            window.__unsubscribeCalled = false;
+            // Lightweight subscribe mock: just mark as active without a real HTTP request
+            BackgroundAlert.subscribe = async function () {
+                localStorage.setItem(BackgroundAlert.storageKey, 'fake-id');
+                BackgroundAlert._showIndicator();
+            };
+            const origUnsub = BackgroundAlert.unsubscribe.bind(BackgroundAlert);
+            BackgroundAlert.unsubscribe = async function () {
+                window.__unsubscribeCalled = true;
+                return origUnsub();
+            };
+        });
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+
+        // Page goes hidden → subscribe
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+            document.dispatchEvent(new Event('visibilitychange'));
+        });
+
+        // Page becomes visible again → unsubscribe
+        await page.evaluate(() => {
+            Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+            document.dispatchEvent(new Event('visibilitychange'));
+        });
+        await page.evaluate(() => new Promise(r => setTimeout(r, 0)));
+
+        const called = await page.evaluate(() => window.__unsubscribeCalled);
+        expect(called).toBe(true);
     });
 });
 
