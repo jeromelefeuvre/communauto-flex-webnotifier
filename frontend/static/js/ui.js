@@ -19,8 +19,6 @@ const UIController = {
         delay: document.getElementById('delay'),
         mapWrapper: document.getElementById('map-wrapper'),
         formInputs: document.getElementById('form-inputs'),
-        floatingSearchBar: document.getElementById('floating-search-bar'),
-        floatingSearchText: document.getElementById('floating-search-text'),
         distanceValue: document.getElementById('distance-value')
     },
 
@@ -28,10 +26,6 @@ const UIController = {
         this.els.btnStart.classList.add('hidden');
         this.els.btnStop.classList.remove('hidden');
         this.els.statusContainer.classList.remove('hidden');
-
-        // Collapse the form immediately upon search start to embrace minimalist interface
-        this.els.formInputs.classList.add('hidden');
-        this.els.floatingSearchBar.classList.remove('hidden');
 
         this.els.resultsContainer.innerHTML = '';
 
@@ -55,10 +49,6 @@ const UIController = {
     },
 
     showSuccessCars: function (cars, city) {
-        // Collapse the search inputs to save vertical screen space
-        this.els.formInputs.classList.add('hidden');
-        this.els.floatingSearchBar.classList.remove('hidden');
-
         const bookingUrl = getBookingUrl(city);
 
         let html = '';
@@ -148,16 +138,9 @@ const UIController = {
         this.els.cityBadge.className = 'city-badge';
     },
 
-    updateFilterText: function (city, radius) {
-        const cityCap = city.charAt(0).toUpperCase() + city.slice(1);
-        this.els.floatingSearchText.innerText = `${cityCap} - ${radius}m`;
-    },
-
     expandForm: function () {
-        this.els.formInputs.classList.remove('hidden');
-        this.els.floatingSearchBar.classList.add('hidden');
-        this.els.resultsContainer.innerHTML = ''; // Optionally clear results when modifying
-        MapController.clearRoutes(); // Optionally clear map routes when modifying
+        this.els.resultsContainer.innerHTML = '';
+        MapController.clearRoutes();
         MapController.carMarkers.forEach(m => MapController.map.removeLayer(m));
         MapController.carMarkers = [];
     }

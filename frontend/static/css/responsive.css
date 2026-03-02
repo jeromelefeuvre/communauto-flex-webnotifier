@@ -2,19 +2,6 @@
    Responsive Design & Mobile Handling
    ========================================================================== */
 
-/* Desktop View (Min Width: 901px) - Prevent Form Collapse */
-@media (min-width: 901px) {
-
-    .floating-search-bar,
-    .floating-search-bar.hidden {
-        display: none !important;
-    }
-
-    #form-inputs.hidden {
-        display: flex !important;
-    }
-}
-
 /* Tablet & Smaller Desktop (Max Width: 900px) */
 @media (max-width: 900px) {
     header {

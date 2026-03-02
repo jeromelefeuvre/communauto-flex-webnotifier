@@ -76,7 +76,6 @@ UIController.els.form.addEventListener('submit', async (e) => {
     AppState.currentDistanceRadius = initialDistance;
     AppState.isSearching = true;
 
-    UIController.updateFilterText(city, initialDistance);
     UIController.toggleSearching();
 
     let shouldFitBounds = false;
@@ -128,10 +127,6 @@ UIController.els.form.addEventListener('submit', async (e) => {
 
 UIController.els.btnStop.addEventListener('click', () => {
     stopSearch();
-});
-
-UIController.els.floatingSearchBar.addEventListener('click', () => {
-    UIController.expandForm();
 });
 
 document.getElementById('btn-filter').addEventListener('click', () => {
