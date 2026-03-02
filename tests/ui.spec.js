@@ -33,8 +33,8 @@ test.describe('UI Responsive Regression Tests', () => {
     });
 
     test.describe('Mobile Viewpoint (<480px)', () => {
-        // Force the browser geometry to trigger mobile CSS media queries
-        test.use({ viewport: { width: 400, height: 800 } });
+        // Force the browser geometry to trigger mobile CSS media queries, with touch enabled
+        test.use({ viewport: { width: 400, height: 800 }, hasTouch: true });
 
         test('App banner is visible on mobile', async ({ page }) => {
             await expect(page.locator('.app-banner')).toBeVisible();
@@ -45,10 +45,10 @@ test.describe('UI Responsive Regression Tests', () => {
         });
 
         test('Address autocomplete works on mobile viewport', async ({ page }) => {
-            await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
+            await page.route('**/api/geocode/address*', route => route.fulfill({
                 contentType: 'application/json',
                 body: JSON.stringify([
-                    { display_name: 'Montréal, Québec, Canada', lat: '45.5088', lon: '-73.5878' }
+                    { display_name: 'Montréal, Québec, Canada', lat: '45.508800', lon: '-73.587800' }
                 ])
             }));
 
@@ -59,6 +59,33 @@ test.describe('UI Responsive Regression Tests', () => {
             // Suggestions should appear
             await expect(page.locator('#address-suggestions')).not.toHaveClass(/hidden/, { timeout: 3000 });
             await expect(page.locator('#address-suggestions li')).toHaveCount(1);
+
+            // Tap the suggestion (mobile touch)
+            await page.locator('#address-suggestions li').first().tap();
+            const loc = await page.evaluate(() => AppState.userLocation);
+            expect(loc[0]).toBeCloseTo(45.5088, 3);
+            await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/);
+            await expect(page.locator('#btn-start')).not.toBeDisabled();
+        });
+
+        test('Autocomplete dropdown is not clipped by overlay overflow on mobile', async ({ page }) => {
+            await page.route('**/api/geocode/address*', route => route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify([
+                    { display_name: 'Montréal, Québec, Canada', lat: '45.508800', lon: '-73.587800' }
+                ])
+            }));
+
+            await page.fill('#address-input', 'Montr');
+            const suggestion = page.locator('#address-suggestions li').first();
+            await expect(suggestion).toBeVisible({ timeout: 3000 });
+
+            // Verify the suggestion is visually within the viewport (not clipped/hidden by overflow)
+            const rect = await suggestion.boundingBox();
+            expect(rect).not.toBeNull();
+            expect(rect.height).toBeGreaterThan(0);
+            expect(rect.y).toBeGreaterThan(0);
+            expect(rect.y + rect.height).toBeLessThan(page.viewportSize().height);
         });
 
         test('Search form stays visible when searching starts', async ({ page }) => {
@@ -619,7 +646,7 @@ test.describe('LocationController — Smart Location Widget', () => {
         await page.goto('http://localhost:8000');
 
         // Mock the Nominatim API so we don't hit the network
-        await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
+        await page.route('**/api/geocode/address*', route => route.fulfill({
             contentType: 'application/json',
             body: JSON.stringify([
                 { display_name: 'Montréal, Québec, Canada', lat: '45.5088', lon: '-73.5878' },
@@ -639,7 +666,7 @@ test.describe('LocationController — Smart Location Widget', () => {
     test('Address autocomplete: selecting a suggestion sets location and hides dropdown', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
-        await page.route('**/nominatim.openstreetmap.org/**', route => route.fulfill({
+        await page.route('**/api/geocode/address*', route => route.fulfill({
             contentType: 'application/json',
             body: JSON.stringify([
                 { display_name: 'Montréal, Québec, Canada', lat: '45.508800', lon: '-73.587800' }
@@ -690,11 +717,11 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(cases.blvdSt).toMatch(/boulevard/i);
     });
 
-    test('Address autocomplete: English address fires two parallel Nominatim requests', async ({ page }) => {
+    test('Address autocomplete: English address fires two parallel geocode requests', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
         const capturedUrls = [];
-        await page.route('**/nominatim.openstreetmap.org/**', route => {
+        await page.route('**/api/geocode/address*', route => {
             capturedUrls.push(route.request().url());
             return route.fulfill({
                 contentType: 'application/json',
@@ -717,11 +744,11 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(capturedUrls.some(u => u.includes('rue+Berri') || u.includes('rue%20Berri'))).toBe(true);
     });
 
-    test('Address autocomplete: postal code uses geocoder.ca for precise results', async ({ page }) => {
+    test('Address autocomplete: postal code uses postal proxy for precise results', async ({ page }) => {
         await page.goto('http://localhost:8000');
 
         const capturedUrls = [];
-        await page.route('**/geocoder.ca/**', route => {
+        await page.route('**/api/geocode/postal*', route => {
             capturedUrls.push(route.request().url());
             return route.fulfill({
                 contentType: 'application/json',
@@ -738,9 +765,9 @@ test.describe('LocationController — Smart Location Widget', () => {
         // Wait for suggestions to appear
         await expect(page.locator('#address-suggestions li')).toBeVisible({ timeout: 2000 });
 
-        // Should hit geocoder.ca (not Nominatim)
+        // Should hit the postal proxy (not the address proxy)
         expect(capturedUrls.length).toBe(1);
-        expect(capturedUrls[0]).toContain('geocoder.ca');
+        expect(capturedUrls[0]).toContain('/api/geocode/postal');
         expect(capturedUrls[0]).toContain('H2M');
 
         // Suggestion text should show formatted postal code with city
@@ -767,5 +794,107 @@ test.describe('LocationController — Smart Location Widget', () => {
         expect(loc).toBeNull();
         const hiddenVal = await page.evaluate(() => document.getElementById('location').value);
         expect(hiddenVal).toBe('');
+    });
+
+    test('Address autocomplete: input < 3 chars hides suggestions', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+
+        // First show suggestions so we can verify they get hidden
+        await page.route('**/api/geocode/address*', route => route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([{ display_name: 'Montréal', lat: '45.5088', lon: '-73.5878' }])
+        }));
+        await page.fill('#address-input', 'Mon');
+        await expect(page.locator('#address-suggestions')).not.toHaveClass(/hidden/, { timeout: 2000 });
+
+        // Trim to 2 chars — suggestions must disappear
+        await page.evaluate(() => {
+            UIController.els.addressInput.value = 'Mo';
+            UIController.els.addressInput.dispatchEvent(new Event('input'));
+        });
+        await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/);
+    });
+
+    test('Address autocomplete: empty results hides suggestions', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+
+        await page.route('**/api/geocode/address*', route => route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([])
+        }));
+
+        await page.fill('#address-input', 'zzzzunknownplace');
+        await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/, { timeout: 2000 });
+    });
+
+    test('Address autocomplete: network error hides suggestions gracefully', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+
+        await page.route('**/api/geocode/address*', route => route.abort('failed'));
+
+        await page.fill('#address-input', 'Montr');
+        // After debounce + failed fetch, suggestions must remain hidden
+        await page.waitForTimeout(600);
+        await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/);
+    });
+
+    test('Address autocomplete: selecting a suggestion enables the Start button', async ({ page }) => {
+        await page.goto('http://localhost:8000');
+
+        await page.route('**/api/geocode/address*', route => route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([{ display_name: 'Montréal, QC', lat: '45.508800', lon: '-73.587800' }])
+        }));
+
+        await page.fill('#address-input', 'Montr');
+        await expect(page.locator('#address-suggestions li')).toBeVisible({ timeout: 2000 });
+        await page.locator('#address-suggestions li').first().click();
+
+        await expect(page.locator('#btn-start')).not.toBeDisabled();
+    });
+
+    test.describe('touch device', () => {
+        test.use({ hasTouch: true });
+
+        test('Address autocomplete: mobile touch tap selects a suggestion', async ({ page }) => {
+            await page.goto('http://localhost:8000');
+
+            await page.route('**/api/geocode/address*', route => route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify([{ display_name: 'Montréal, QC', lat: '45.508800', lon: '-73.587800' }])
+            }));
+
+            await page.fill('#address-input', 'Montr');
+            const suggestion = page.locator('#address-suggestions li').first();
+            await expect(suggestion).toBeVisible({ timeout: 2000 });
+
+            // Simulate a touch tap instead of a mouse click
+            await suggestion.tap();
+
+            // Selection must work identically to a mouse click
+            const loc = await page.evaluate(() => AppState.userLocation);
+            expect(loc[0]).toBeCloseTo(45.5088, 3);
+            await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/);
+            await expect(page.locator('#btn-start')).not.toBeDisabled();
+        });
+    });
+
+    test('Address autocomplete: [Autocomplete] logs are emitted when typing', async ({ page }) => {
+        const logs = [];
+        page.on('console', msg => { if (msg.text().startsWith('[Autocomplete]')) logs.push(msg.text()); });
+        await page.goto('http://localhost:8000');
+
+        await page.route('**/api/geocode/address*', route => route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([{ display_name: 'Montréal', lat: '45.5088', lon: '-73.5878' }])
+        }));
+
+        await page.fill('#address-input', 'Montr');
+        await expect(page.locator('#address-suggestions li')).toBeVisible({ timeout: 2000 });
+
+        expect(logs.some(l => l.includes('[Autocomplete] input:'))).toBe(true);
+        expect(logs.some(l => l.includes('[Autocomplete] fetching suggestions for:'))).toBe(true);
+        expect(logs.some(l => l.includes('[Autocomplete] geocode requests:'))).toBe(true);
+        expect(logs.some(l => l.includes('[Autocomplete] results:'))).toBe(true);
     });
 });

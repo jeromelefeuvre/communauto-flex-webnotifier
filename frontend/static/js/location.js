@@ -100,6 +100,7 @@ const LocationController = {
     onAddressInput: function () {
         clearTimeout(this._debounceTimer);
         const query = UIController.els.addressInput.value.trim();
+        console.log('[Autocomplete] input:', JSON.stringify(query));
         if (query.length === 0) {
             UIController.els.btnStart.disabled = true;
             UIController.els.locationInput.value = '';
@@ -153,13 +154,13 @@ const LocationController = {
     },
 
     fetchSuggestions: async function (query) {
+        console.log('[Autocomplete] fetching suggestions for:', JSON.stringify(query));
         try {
-            const headers = { 'Accept-Language': 'fr,en' };
-
-            // Postal codes use geocoder.ca for precise neighborhood-level results
+            // Postal codes use geocoder.ca (via backend proxy) for precise neighborhood-level results
             const postalCode = this._parsePostalCode(query);
             if (postalCode) {
-                const url = `https://geocoder.ca/?locate=${encodeURIComponent(postalCode)}&geoit=XML&json=1`;
+                const url = `/api/geocode/postal?q=${encodeURIComponent(postalCode)}`;
+                console.log('[Autocomplete] postal code lookup:', url);
                 const res = await fetch(url);
                 const data = await res.json();
                 if (data.latt && data.longt) {
@@ -171,6 +172,7 @@ const LocationController = {
                         lon: data.longt
                     }]);
                 } else {
+                    console.log('[Autocomplete] postal code returned no coordinates');
                     this.hideSuggestions();
                 }
                 return;
@@ -183,14 +185,14 @@ const LocationController = {
             const queryWithCity = detectedCityName && !query.toLowerCase().includes(detectedCityName.toLowerCase())
                 ? `${query}, ${detectedCityName}`
                 : query;
-            const buildUrl = q =>
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&countrycodes=ca`;
+            const buildUrl = q => `/api/geocode/address?q=${encodeURIComponent(q)}`;
 
             const frQuery = this._toFrenchQuery(queryWithCity);
-            const requests = [fetch(buildUrl(queryWithCity), { headers })];
-            if (frQuery) requests.push(fetch(buildUrl(frQuery), { headers }));
+            const urls = [buildUrl(queryWithCity)];
+            if (frQuery) urls.push(buildUrl(frQuery));
+            console.log('[Autocomplete] geocode requests:', urls);
 
-            const responses = await Promise.all(requests);
+            const responses = await Promise.all(urls.map(u => fetch(u)));
             const arrays = await Promise.all(responses.map(r => r.json()));
 
             // Merge and deduplicate by rounded (lat, lon) key
@@ -203,8 +205,10 @@ const LocationController = {
                 }
             }
 
+            console.log('[Autocomplete] results:', results.length);
             this.renderSuggestions(results.slice(0, 5));
-        } catch {
+        } catch (err) {
+            console.error('[Autocomplete] fetch error:', err);
             this.hideSuggestions();
         }
     },
@@ -220,8 +224,16 @@ const LocationController = {
             li.textContent = r.display_name;
             li.dataset.lat = r.lat;
             li.dataset.lon = r.lon;
+            // touchend handles mobile taps and calls preventDefault to stop
+            // the browser from also firing synthesized mousedown/click events.
+            li.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                this.selectSuggestion(li);
+            });
+            // mousedown handles desktop; preventDefault keeps focus on the input
+            // so the suggestions list doesn't disappear before selection is processed.
             li.addEventListener('mousedown', (e) => {
-                e.preventDefault(); // keep focus on input
+                e.preventDefault();
                 this.selectSuggestion(li);
             });
             list.appendChild(li);
@@ -232,6 +244,7 @@ const LocationController = {
     selectSuggestion: function (li) {
         const lat = parseFloat(li.dataset.lat).toFixed(6);
         const lng = parseFloat(li.dataset.lon).toFixed(6);
+        console.log('[Autocomplete] selected:', li.textContent, lat, lng);
         UIController.els.addressInput.value = li.textContent;
         UIController.els.locationInput.value = `${lat},${lng}`;
         if (typeof AppState !== 'undefined') {

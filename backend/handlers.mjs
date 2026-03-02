@@ -46,6 +46,58 @@ export function readBody(req) {
     });
 }
 
+export function handleGeocodeAddress(requestUrl, res) {
+    const params = new URL(requestUrl, 'http://localhost').searchParams;
+    const q = params.get('q') || '';
+    if (!q) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end('[]');
+    }
+
+    const target = new URL('https://nominatim.openstreetmap.org/search');
+    target.searchParams.set('q', q);
+    target.searchParams.set('format', 'json');
+    target.searchParams.set('limit', '5');
+    target.searchParams.set('addressdetails', '1');
+    target.searchParams.set('countrycodes', 'ca');
+
+    console.log(`[Geocode] Address lookup: ${q}`);
+
+    https.get({ hostname: 'nominatim.openstreetmap.org', path: `/search?${target.searchParams}`, headers: {
+        'Accept-Language': 'fr,en',
+        'User-Agent': 'CommunautoFlexWebNotifier/1.0 (https://github.com/jeromelefeuvre/communauto-flex-webnotifier)'
+    }}, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        proxyRes.pipe(res);
+    }).on('error', (err) => {
+        console.error('[Geocode] Address error:', err.message);
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end('[]');
+    });
+}
+
+export function handleGeocodePostal(requestUrl, res) {
+    const params = new URL(requestUrl, 'http://localhost').searchParams;
+    const q = params.get('q') || '';
+    if (!q) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        return res.end('{}');
+    }
+
+    console.log(`[Geocode] Postal code lookup: ${q}`);
+
+    https.get({ hostname: 'geocoder.ca', path: `/?locate=${encodeURIComponent(q)}&geoit=XML&json=1`, headers: {
+        'User-Agent': 'CommunautoFlexWebNotifier/1.0'
+    }}, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        proxyRes.pipe(res);
+    }).on('error', (err) => {
+        console.error('[Geocode] Postal error:', err.message);
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end('{}');
+    });
+}
+
 export function handleApiProxy(requestUrl, res) {
     const targetUrl = new URL(requestUrl.replace('/api/cars', '/WCF/LSI/LSIBookingServiceV3.svc/GetAvailableVehicles'), 'https://www.reservauto.net');
     console.log(`[API] Proxying request to: ${targetUrl.href}`);

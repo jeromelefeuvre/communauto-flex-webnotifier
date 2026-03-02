@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import http from 'http';
-import { handleApiProxy, handleVersionProxy, handleStaticFiles, readBody } from './handlers.mjs';
+import { handleApiProxy, handleVersionProxy, handleStaticFiles, handleGeocodeAddress, handleGeocodePostal, readBody } from './handlers.mjs';
 import { initWebPush, addSubscription, removeSubscription } from './pushManager.mjs';
 
 const pushEnabled = initWebPush();
@@ -66,6 +66,16 @@ const server = http.createServer(async (req, res) => {
             res.writeHead(400, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ error: err.message }));
         }
+    }
+
+    // ── Geocode proxy ─────────────────────────────────────────────────────────
+
+    if (requestUrl.startsWith('/api/geocode/address')) {
+        return handleGeocodeAddress(requestUrl, res);
+    }
+
+    if (requestUrl.startsWith('/api/geocode/postal')) {
+        return handleGeocodePostal(requestUrl, res);
     }
 
     // ── Existing routes ───────────────────────────────────────────────────────
