@@ -248,7 +248,7 @@ const AppController = {
 
         try {
             // Android Chrome rejects new Notification() — must go through the service worker
-            if ('serviceWorker' in navigator) {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                 const sw = await navigator.serviceWorker.ready;
                 sw.showNotification(title, options);
             } else {
