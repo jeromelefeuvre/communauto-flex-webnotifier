@@ -112,10 +112,8 @@ const UIController = {
         const cardDesc = document.getElementById(`desc-${car.plate}`);
         if (cardDesc) {
             cardDesc.classList.add('has-walking');
-            cardDesc.innerHTML = `
-                ${WALKING_SVG}
-                <span class="walking-highlight">${walkDistanceStr} walk (${walkMins} min)</span>
-            `;
+            const label = walkMins !== null ? `${walkDistanceStr} walk (${walkMins} min)` : walkDistanceStr;
+            cardDesc.innerHTML = `${WALKING_SVG}<span class="walking-highlight">${label}</span>`;
         }
     },
 

@@ -202,6 +202,9 @@ const AppController = {
                     MapController.getWalkingDistance(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(walkData => {
                         if (walkData) {
                             UIController.updateCarUIWithWalkingData(car, MathUtils.humanDistance(walkData.distance), Math.round(walkData.duration / 60));
+                        } else {
+                            // OSRM unavailable: fall back to straight-line distance
+                            UIController.updateCarUIWithWalkingData(car, `~${MathUtils.humanDistance(car.distance)}`, null);
                         }
                     });
                 });
@@ -227,7 +230,7 @@ const AppController = {
         }
     },
 
-    sendDesktopNotification: function (cars, city) {
+    sendDesktopNotification: async function (cars, city) {
         if (!window.Notification || Notification.permission !== "granted") return;
 
         const primaryCar = cars[0];
@@ -236,16 +239,25 @@ const AppController = {
             ? `Closest: ${primaryCar.brand} ${primaryCar.model} (${Math.floor(primaryCar.distance)}m away)`
             : `${primaryCar.brand} ${primaryCar.model} is ${Math.floor(primaryCar.distance)}m away.`;
 
-        const notification = new Notification(title, {
-            body: body,
+        const options = {
+            body,
             icon: 'static/images/favicon-32x32.png',
-            requireInteraction: true
-        });
-
-        notification.onclick = () => {
-            window.open(getBookingUrl(city), '_blank');
-            notification.close();
+            requireInteraction: true,
+            data: { url: getBookingUrl(city) }
         };
+
+        try {
+            // Android Chrome rejects new Notification() — must go through the service worker
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                const sw = await navigator.serviceWorker.ready;
+                sw.showNotification(title, options);
+            } else {
+                const notification = new Notification(title, options);
+                notification.onclick = () => { window.open(notification.data.url, '_blank'); notification.close(); };
+            }
+        } catch (e) {
+            console.warn('[Notify] Notification failed:', e);
+        }
     }
 };
 
