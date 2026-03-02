@@ -187,6 +187,90 @@ test.describe('UI Responsive Regression Tests', () => {
     });
 });
 
+test.describe('Search Results', () => {
+    test.use({ viewport: { width: 1200, height: 800 } });
+
+    test.beforeEach(async ({ page }) => {
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
+        await page.route('**/api/cars*', route => route.fulfill({
+            json: {
+                d: {
+                    Vehicles: [{
+                        CarBrand: 'Kia', CarModel: 'Rio', CarPlate: 'TST001',
+                        CarColor: 'silver', Latitude: 45.5020, Longitude: -73.5680
+                    }]
+                }
+            }
+        }));
+        await page.goto('http://localhost:8000');
+    });
+
+    test.afterEach(async ({ page }, testInfo) => {
+        const coverage = await page.coverage.stopJSCoverage();
+        await addCoverageReport(coverage, testInfo);
+    });
+
+    test('Walking distance shows fallback ~distance when OSRM fails', async ({ page }) => {
+        // Block the routing endpoint to simulate OSRM failure
+        await page.route('**/routing.openstreetmap.de/**', route => route.abort());
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+
+        await expect(page.locator('.car-card')).toBeVisible({ timeout: 5000 });
+
+        // Fallback: crow-flies distance prefixed with ~
+        const distEl = page.locator('#desc-TST001 .walking-highlight');
+        await expect(distEl).toBeVisible({ timeout: 5000 });
+        const text = await distEl.textContent();
+        expect(text).toMatch(/^~/);
+    });
+
+    test('Notification does not crash when new Notification() throws (Android behaviour)', async ({ page }) => {
+        await page.route('**/routing.openstreetmap.de/**', route => route.fulfill({
+            json: { routes: [{ distance: 300, duration: 220 }] }
+        }));
+
+        // Simulate Android Chrome: new Notification() throws, only SW path is valid
+        await page.addInitScript(() => {
+            window.__notifyError = null;
+            const OrigNotification = window.Notification;
+            window.Notification = class {
+                constructor() { throw new TypeError('Illegal constructor. Use ServiceWorkerRegistration.showNotification() instead.'); }
+                static get permission() { return OrigNotification.permission; }
+                static requestPermission(...args) { return OrigNotification.requestPermission(...args); }
+            };
+        });
+
+        await page.context().grantPermissions(['notifications']);
+        await page.goto('http://localhost:8000');
+
+        // Catch any uncaught page errors triggered by the notification code
+        const pageErrors = [];
+        page.on('pageerror', err => pageErrors.push(err.message));
+
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+        await page.click('#btn-start');
+
+        await expect(page.locator('.car-card')).toBeVisible({ timeout: 5000 });
+        await page.waitForTimeout(300);
+
+        // Car results must appear and no uncaught notification error should crash the page
+        const notifyErrors = pageErrors.filter(m => m.includes('Notification') || m.includes('showNotification'));
+        expect(notifyErrors).toHaveLength(0);
+    });
+});
+
 test.describe('PWA', () => {
 
     test.beforeEach(async ({ page }) => {
