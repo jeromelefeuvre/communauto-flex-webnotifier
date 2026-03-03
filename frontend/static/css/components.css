@@ -3,7 +3,7 @@
     width: 400px;
     flex-shrink: 0;
     height: 100%;
-    overflow-y: auto;
+    overflow-y: hidden;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
@@ -12,16 +12,16 @@
     z-index: 10;
 }
 
-/* Custom Scrollbar */
-.results-overlay::-webkit-scrollbar {
+/* Custom Scrollbar for results container */
+.results-container::-webkit-scrollbar {
     width: 6px;
 }
 
-.results-overlay::-webkit-scrollbar-track {
+.results-container::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.results-overlay::-webkit-scrollbar-thumb {
+.results-container::-webkit-scrollbar-thumb {
     background-color: var(--border-color);
     border-radius: 10px;
 }
@@ -31,14 +31,12 @@
 }
 
 .results-container {
-    /* margin-top: 24px; */
     display: flex;
     flex-direction: column;
-    /* Create a unified panel like Google Maps */
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
     background: var(--bg-color);
-    /* border: 1px solid var(--border-color); */
-    /* border-radius: 12px; */
-    overflow: visible;
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 

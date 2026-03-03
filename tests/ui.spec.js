@@ -162,8 +162,7 @@ test.describe('UI Responsive Regression Tests', () => {
                 for (let i = 0; i < 10; i++) {
                     container.appendChild(original.cloneNode(true));
                 }
-                const overlay = document.getElementById('results-overlay');
-                return overlay.scrollHeight > overlay.clientHeight;
+                return container.scrollHeight > container.clientHeight;
             });
             expect(isScrollable).toBe(true);
         });

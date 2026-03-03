@@ -291,4 +291,35 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
         await expect(electricPins).toHaveCount(1);
     });
 
+    test('Displays all cars within radius without arbitrary limit', async ({ page }) => {
+        // Override the default mock to provide 5 cars all very close
+        await page.route('**/api/cars*', async route => {
+            const mockData = {
+                d: {
+                    Vehicles: [
+                        { CarBrand: "B1", CarModel: "M1", CarPlate: "T1", CarColor: "C1", Latitude: 45.556000, Longitude: -73.652000 },
+                        { CarBrand: "B2", CarModel: "M2", CarPlate: "T2", CarColor: "C2", Latitude: 45.556100, Longitude: -73.652100 },
+                        { CarBrand: "B3", CarModel: "M3", CarPlate: "T3", CarColor: "C3", Latitude: 45.556200, Longitude: -73.652200 },
+                        { CarBrand: "B4", CarModel: "M4", CarPlate: "T4", CarColor: "C4", Latitude: 45.556300, Longitude: -73.652300 },
+                        { CarBrand: "B5", CarModel: "M5", CarPlate: "T5", CarColor: "C5", Latitude: 45.556400, Longitude: -73.652400 }
+                    ]
+                }
+            };
+            await route.fulfill({ json: mockData });
+        });
+
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+
+        // Change distance to 800m to include the cars
+        await page.evaluate(() => {
+            const el = document.getElementById('distance');
+            el.value = '800';
+            el.dispatchEvent(new Event('input'));
+        });
+        await page.click('#btn-start');
+
+        // All 5 cars should be displayed in the list since the artificial 3-car limit is removed
+        await expect(page.locator('.car-card')).toHaveCount(5, { timeout: 15000 });
+    });
+
 });

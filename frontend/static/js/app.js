@@ -209,7 +209,7 @@ const AppController = {
             UIController.updateStatus(`${cars.length} cars found.\n${alertCars.length} within ${MathUtils.humanDistance(AppState.currentDistanceRadius)} (${mapCars.length} map total). Waiting...`);
 
             if (alertCars.length > 0) {
-                const topCars = alertCars.slice(0, 3); // Take up to 3 cars
+                const topCars = alertCars; // Take all alert cars
 
                 UIController.showSuccessCars(topCars, city);
                 this.sendDesktopNotification(topCars, city);
