@@ -57,7 +57,7 @@
         max-height: 45vh;
         height: auto;
         /* overflow: visible so the address autocomplete dropdown can escape the overlay bounds.
-           Car results on mobile scroll via the page (results-container is overflow: visible). */
+           Car results are contained and scroll internally. */
         overflow: visible;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
@@ -107,7 +107,7 @@
     }
 
     .results-container {
-        overflow-y: visible;
+        /* overflow-y is auto from components.css */
         box-shadow: none;
         background: transparent;
     }
