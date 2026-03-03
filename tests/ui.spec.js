@@ -110,6 +110,30 @@ test.describe('UI Responsive Regression Tests', () => {
         // Force the browser geometry to trigger desktop overrides
         test.use({ viewport: { width: 1200, height: 800 } });
 
+        test('Address autocomplete works on desktop viewport', async ({ page }) => {
+            await page.route('**/api/geocode/address*', route => route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify([
+                    { display_name: 'Montréal, Québec, Canada', lat: '45.508800', lon: '-73.587800' }
+                ])
+            }));
+
+            // Address input should be visible by default
+            await expect(page.locator('#address-input-wrapper')).toBeVisible();
+            await page.fill('#address-input', 'Montr');
+
+            // Suggestions should appear
+            await expect(page.locator('#address-suggestions')).not.toHaveClass(/hidden/, { timeout: 3000 });
+            await expect(page.locator('#address-suggestions li')).toHaveCount(1);
+
+            // Click the suggestion (desktop click)
+            await page.locator('#address-suggestions li').first().click();
+            const loc = await page.evaluate(() => AppState.userLocation);
+            expect(loc[0]).toBeCloseTo(45.5088, 3);
+            await expect(page.locator('#address-suggestions')).toHaveClass(/hidden/);
+            await expect(page.locator('#btn-start')).not.toBeDisabled();
+        });
+
         test('Search form stays visible on desktop when searching starts', async ({ page }) => {
             await expect(page.locator('#form-inputs')).toBeVisible();
             await expect(page.locator('#btn-start')).toBeVisible();

@@ -44,7 +44,7 @@ const LocationController = {
         this.showAddressInput();
     },
 
-    setLoading: function () {},
+    setLoading: function () { },
 
     // Detects city from coordinates, updates AppState and city badge UI.
     // Returns the detected city string or null.
@@ -159,7 +159,7 @@ const LocationController = {
             // Postal codes use geocoder.ca (via backend proxy) for precise neighborhood-level results
             const postalCode = this._parsePostalCode(query);
             if (postalCode) {
-                const url = `/api/geocode/postal?q=${encodeURIComponent(postalCode)}`;
+                const url = `api/geocode/postal?q=${encodeURIComponent(postalCode)}`;
                 console.log('[Autocomplete] postal code lookup:', url);
                 const res = await fetch(url);
                 const data = await res.json();
@@ -185,7 +185,7 @@ const LocationController = {
             const queryWithCity = detectedCityName && !query.toLowerCase().includes(detectedCityName.toLowerCase())
                 ? `${query}, ${detectedCityName}`
                 : query;
-            const buildUrl = q => `/api/geocode/address?q=${encodeURIComponent(q)}`;
+            const buildUrl = q => `api/geocode/address?q=${encodeURIComponent(q)}`;
 
             const frQuery = this._toFrenchQuery(queryWithCity);
             const urls = [buildUrl(queryWithCity)];
