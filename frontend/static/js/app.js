@@ -208,16 +208,12 @@ const AppController = {
 
             UIController.updateStatus(`${cars.length} cars found.\n${alertCars.length} within ${MathUtils.humanDistance(AppState.currentDistanceRadius)} (${mapCars.length} map total). Waiting...`);
 
-            if (alertCars.length > 0) {
-                const topCars = alertCars; // Take all alert cars
+            // Always update the UI with what's on the map
+            if (mapCars.length > 0) {
+                UIController.showSuccessCars(mapCars, city);
 
-                UIController.showSuccessCars(topCars, city);
-                this.sendDesktopNotification(topCars, city);
-
-                stopSearch();
-
-                // Fetch walking distances for all cars in parallel and update UI as each resolves
-                topCars.forEach(car => {
+                // Fetch walking distances for the map cars in parallel and update UI as each resolves
+                mapCars.forEach(car => {
                     MapController.getWalkingDistance(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(walkData => {
                         if (walkData) {
                             UIController.updateCarUIWithWalkingData(car, MathUtils.humanDistance(walkData.distance), Math.round(walkData.duration / 60));
@@ -227,16 +223,22 @@ const AppController = {
                         }
                     });
                 });
+            } else {
+                UIController.els.resultsContainer.innerHTML = ''; // Clear stale results
+            }
+
+            // Only trigger alert/stopping logic if a car is found strictly inside the requested radius
+            if (alertCars.length > 0) {
+                this.sendDesktopNotification(alertCars, city);
+                stopSearch();
 
                 // When only one car found, auto-select it to draw the walking route on the map
-                if (topCars.length >= 1) {
+                if (mapCars.length >= 1) {
                     const firstCard = document.querySelector('.car-card');
                     if (firstCard) firstCard.click();
                 }
 
                 return;
-            } else {
-                UIController.els.resultsContainer.innerHTML = ''; // Clear stale results
             }
 
         } catch (err) {
