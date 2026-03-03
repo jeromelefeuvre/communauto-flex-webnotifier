@@ -99,11 +99,9 @@ const MapController = {
             const marker = L.marker([car.lat, car.lng], { icon: icon, plate: car.plate }).addTo(this.map);
 
             marker.on('click', () => {
-                this.drawRouteToCar(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(routeData => {
-                    if (routeData) {
-                        UIController.updateCarUIWithWalkingData(car, MathUtils.humanDistance(routeData.distance), Math.round(routeData.duration / 60));
-                    }
-                });
+                if (window.UIController) {
+                    window.UIController.selectAndScrollToCar(car.plate);
+                }
             });
 
             this.carMarkers.push(marker);

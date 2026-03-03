@@ -111,6 +111,16 @@ const UIController = {
         });
     },
 
+    selectAndScrollToCar: function (plate) {
+        const card = this.els.resultsContainer.querySelector(`.car-card[data-plate="${plate}"]`);
+        if (card) {
+            // Scroll it into the visible area of results-container
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Programmatically trigger the click handler to select and draw the route
+            card.click();
+        }
+    },
+
     updateCarUIWithWalkingData: function (car, walkDistanceStr, walkMins) {
         const cardDesc = document.getElementById(`desc-${car.plate}`);
         if (cardDesc) {

@@ -356,6 +356,58 @@ test.describe('Search Results', () => {
         const count = await page.evaluate(() => window.notificationCount);
         expect(count).toBe(1);
     });
+
+    test('Map marker click selects and scrolls to corresponding car card', async ({ page }) => {
+        // Setup mock response with two test vehicles
+        await page.route('**/api/cars*', async route => {
+            const mockData = {
+                d: {
+                    Vehicles: [
+                        { CarBrand: 'Honda', CarModel: 'Civic', CarPlate: 'CLICK01', CarColor: 'blue', Latitude: 45.5019, Longitude: -73.5675 },
+                        { CarBrand: 'Toyota', CarModel: 'Prius', CarPlate: 'CLICK02', CarColor: 'red', Latitude: 45.5020, Longitude: -73.5680 }
+                    ]
+                }
+            };
+            await route.fulfill({ json: mockData });
+        });
+
+        // Setup GPS correctly
+        await page.evaluate(() => {
+            AppState.userLocation = [45.5017, -73.5673];
+            AppState.detectedCity = 'montreal';
+            document.getElementById('location').value = '45.5017,-73.5673';
+            document.getElementById('btn-start').disabled = false;
+        });
+
+        await page.click('#btn-start');
+
+        // Wait for both car cards to render in the sidebar
+        const targetCard1 = page.locator('.car-card', { hasText: 'CLICK01' });
+        const targetCard2 = page.locator('.car-card', { hasText: 'CLICK02' });
+
+        await expect(targetCard1).toBeVisible();
+        await expect(targetCard2).toBeVisible();
+
+        // The app automatically clicks the first car on load
+        await expect(targetCard1).toHaveClass(/selected/);
+        await expect(targetCard2).not.toHaveClass(/selected/);
+
+        // Click the second map marker image (using Leaflet's standard selector)
+        // Leaflet renders markers in DOM order, so .nth(1) corresponds to the second car
+        const mapMarker2 = page.locator('img.leaflet-marker-icon.leaflet-zoom-animated').nth(1);
+        await expect(mapMarker2).toBeVisible();
+
+        // Wait briefly for Leaflet animations to settle then click the second marker
+        await page.waitForTimeout(500);
+        await mapMarker2.click({ force: true });
+
+        // Wait for walking distance calculation to trigger (via card click handler)
+        // and confirm the second card was indeed selected visually while the first remains unselected
+        await expect(targetCard2).toHaveClass(/selected/);
+        await expect(targetCard1).not.toHaveClass(/selected/);
+        await expect(targetCard2.locator('.car-distance')).toHaveClass(/has-walking/);
+    });
+
 });
 
 test.describe('PWA', () => {
