@@ -189,6 +189,8 @@ const AppController = {
                 model: vehicle.CarModel,
                 plate: vehicle.CarPlate,
                 color: vehicle.CarColor,
+                isElectric: !!vehicle.IsElectric,
+                energyLevel: vehicle.EnergyLevel ?? null,
                 lat: vehicle.Latitude,
                 lng: vehicle.Longitude,
                 distance: MathUtils.calculateDistance(AppState.userLocation[0], AppState.userLocation[1], vehicle.Latitude, vehicle.Longitude),

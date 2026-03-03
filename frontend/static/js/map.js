@@ -83,14 +83,20 @@ const MapController = {
         this.carMarkers.forEach(m => this.map.removeLayer(m));
         this.carMarkers = [];
 
-        const carIcon = L.icon({
+        const defaultIcon = L.icon({
             iconUrl: 'static/images/pin-am.png',
+            iconAnchor: [10, 27],
+            popupAnchor: [0, -27]
+        });
+        const electricIcon = L.icon({
+            iconUrl: 'static/images/pin-electric.png',
             iconAnchor: [10, 27],
             popupAnchor: [0, -27]
         });
 
         filteredCars.forEach(car => {
-            const marker = L.marker([car.lat, car.lng], { icon: carIcon, plate: car.plate }).addTo(this.map);
+            const icon = car.isElectric ? electricIcon : defaultIcon;
+            const marker = L.marker([car.lat, car.lng], { icon: icon, plate: car.plate }).addTo(this.map);
 
             marker.on('click', () => {
                 this.drawRouteToCar(AppState.userLocation[0], AppState.userLocation[1], car.lat, car.lng).then(routeData => {

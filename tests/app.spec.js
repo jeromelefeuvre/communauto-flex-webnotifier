@@ -30,6 +30,8 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
                             CarModel: "Close Car 2",
                             CarPlate: "TEST 03",
                             CarColor: "Silver",
+                            IsElectric: true,
+                            EnergyLevel: 85,
                             Latitude: 45.556100, // ~697m away
                             Longitude: -73.652100
                         },
@@ -254,6 +256,39 @@ test.describe('Communauto Flex WebNotifier end-to-end tests', () => {
             const activeRouteCoords = await page.evaluate(() => window.MapController.lastRoutedCoord);
             expect(activeRouteCoords).toBe('45.5561,-73.6521');
         }).toPass({ timeout: 5000 });
+    });
+
+    test('Electric cars render with electric map pins and battery badges', async ({ page }) => {
+        await expect(page.locator('#btn-start')).not.toBeDisabled({ timeout: 5000 });
+
+        // Change distance to 800m to include the cars
+        await page.evaluate(() => {
+            const el = document.getElementById('distance');
+            el.value = '800';
+            el.dispatchEvent(new Event('input'));
+        });
+        await page.click('#btn-start');
+
+        // Wait for cars to render locally in the list
+        await expect(page.locator('.car-card')).toHaveCount(3, { timeout: 15000 });
+
+        // The second car (TEST 03) was mocked as electric with 85% energy
+        const electricCarCard = page.locator('.car-card', { hasText: 'TEST 03' });
+        await expect(electricCarCard).toBeVisible();
+
+        // Check for the ⚡ badge with 85% text
+        const badge = electricCarCard.locator('.electric-badge');
+        await expect(badge).toBeVisible();
+        await expect(badge).toHaveText('⚡ 85%');
+
+        // The first car (TEST 01) is not electric, should not have the badge
+        const regularCarCard = page.locator('.car-card', { hasText: 'TEST 01' });
+        await expect(regularCarCard.locator('.electric-badge')).toBeHidden();
+
+        // Verify Leaflet DOM markers - the electric pin should be present on the map
+        // (Playwright can read the src of the leaflet marker images)
+        const electricPins = page.locator('img.leaflet-marker-icon[src*="pin-electric.png"]');
+        await expect(electricPins).toHaveCount(1);
     });
 
 });

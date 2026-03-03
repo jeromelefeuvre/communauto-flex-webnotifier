@@ -65,7 +65,10 @@ const UIController = {
                             </svg>
                         </div>
                         <div class="car-details">
-                            <h3 class="car-title">${car.brand} ${car.model}</h3>
+                            <h3 class="car-title">
+                                ${car.brand} ${car.model}
+                                ${car.isElectric ? `<span class="electric-badge">⚡ ${car.energyLevel ?? '?'}%</span>` : ''}
+                            </h3>
                             <div class="car-meta">${car.color} • Plate: ${car.plate}</div>
                             <div id="desc-${car.plate}" class="car-distance">
                                 ${WALKING_SVG}
