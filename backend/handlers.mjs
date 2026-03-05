@@ -63,10 +63,12 @@ export function handleGeocodeAddress(requestUrl, res) {
 
     console.log(`[Geocode] Address lookup: ${q}`);
 
-    https.get({ hostname: 'nominatim.openstreetmap.org', path: `/search?${target.searchParams}`, headers: {
-        'Accept-Language': 'fr,en',
-        'User-Agent': 'CommunautoFlexWebNotifier/1.0 (https://github.com/jeromelefeuvre/communauto-flex-webnotifier)'
-    }}, (proxyRes) => {
+    https.get({
+        hostname: 'nominatim.openstreetmap.org', path: `/search?${target.searchParams}`, headers: {
+            'Accept-Language': 'fr,en',
+            'User-Agent': 'CommunautoFlexWebNotifier/1.0 (https://github.com/jeromelefeuvre/communauto-flex-webnotifier)'
+        }
+    }, (proxyRes) => {
         res.writeHead(proxyRes.statusCode, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
         proxyRes.pipe(res);
     }).on('error', (err) => {
@@ -86,9 +88,11 @@ export function handleGeocodePostal(requestUrl, res) {
 
     console.log(`[Geocode] Postal code lookup: ${q}`);
 
-    https.get({ hostname: 'geocoder.ca', path: `/?locate=${encodeURIComponent(q)}&geoit=XML&json=1`, headers: {
-        'User-Agent': 'CommunautoFlexWebNotifier/1.0'
-    }}, (proxyRes) => {
+    https.get({
+        hostname: 'geocoder.ca', path: `/?locate=${encodeURIComponent(q)}&geoit=XML&json=1`, headers: {
+            'User-Agent': 'CommunautoFlexWebNotifier/1.0'
+        }
+    }, (proxyRes) => {
         res.writeHead(proxyRes.statusCode, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
         proxyRes.pipe(res);
     }).on('error', (err) => {
@@ -165,7 +169,7 @@ export function handleStaticFiles(requestUrl, res) {
                     } catch (e) { }
 
                     // Dynamically cache-bust main static assets based on package version
-                    text = text.replace(/href="static\/css\/style\.css"/g, `href="static/css/style.css?v=${version}"`);
+                    text = text.replace(/href="static\/css\/([^"]+)\.css"/g, `href="static/css/$1.css?v=${version}"`);
                     text = text.replace(/src="static\/js\/config\.js"/g, `src="static/js/config.js?v=${version}"`);
                     text = text.replace(/src="static\/js\/utils\.js"/g, `src="static/js/utils.js?v=${version}"`);
                     text = text.replace(/src="static\/js\/ui\.js"/g, `src="static/js/ui.js?v=${version}"`);

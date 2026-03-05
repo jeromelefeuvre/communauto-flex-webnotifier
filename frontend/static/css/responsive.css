@@ -43,6 +43,32 @@
         padding: 8px 16px;
     }
 
+    header {
+        text-align: left;
+        min-width: 0; /* Allows text truncation in flex container */
+        flex-shrink: 1; /* Allows header to shrink */
+        margin-right: 12px;
+    }
+
+    header h1 {
+        font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .subtitle {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .btn-install-header {
+        flex-shrink: 0; /* Ensure the button never shrinks and gets cut off */
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
     .map-container {
         border-radius: 0;
         border: none;
