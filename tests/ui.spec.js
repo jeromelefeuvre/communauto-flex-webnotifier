@@ -462,6 +462,81 @@ test.describe('PWA', () => {
     });
 });
 
+test.describe('PWA Install Prompt', () => {
+
+    test.beforeEach(async ({ page }) => {
+        await page.coverage.startJSCoverage({ resetOnNavigation: false });
+        await page.route('**/api/cars*', async route => route.fulfill({ json: { d: { Vehicles: [] } } }));
+        await page.goto('http://localhost:8000');
+    });
+
+    test.afterEach(async ({ page }, testInfo) => {
+        const coverage = await page.coverage.stopJSCoverage();
+        await addCoverageReport(coverage, testInfo);
+    });
+
+    test('Install prompt simulates and shows banner and header button', async ({ page }) => {
+        // Banner and header button should be hidden initially
+        await expect(page.locator('#pwa-install-banner')).toHaveClass(/hidden/);
+        await expect(page.locator('#btn-install-header')).toHaveClass(/hidden/);
+
+        // Fire fake beforeinstallprompt event
+        await page.evaluate(() => {
+            const event = new Event('beforeinstallprompt');
+            event.prompt = () => { };
+            event.userChoice = Promise.resolve({ outcome: 'accepted' });
+            window.dispatchEvent(event);
+        });
+
+        // Banner and header button should become visible
+        await expect(page.locator('#pwa-install-banner')).not.toHaveClass(/hidden/);
+        await expect(page.locator('#btn-install-header')).not.toHaveClass(/hidden/);
+    });
+
+    test('Dismissing the install prompt hides banner and sets localStorage', async ({ page }) => {
+        // Fire fake beforeinstallprompt event
+        await page.evaluate(() => {
+            const event = new Event('beforeinstallprompt');
+            event.prompt = () => { };
+            event.userChoice = Promise.resolve({ outcome: 'accepted' });
+            window.dispatchEvent(event);
+        });
+
+        await expect(page.locator('#pwa-install-banner')).not.toHaveClass(/hidden/);
+
+        // Click the dismiss button
+        await page.locator('#btn-pwa-dismiss').click();
+
+        // Banner should be hidden
+        await expect(page.locator('#pwa-install-banner')).toHaveClass(/hidden/);
+
+        // Header button should stay visible (after a short delay per logic)
+        // Since we changed to a CSS transitionend event, it fires almost instantly
+        // in Playwright when animations are disabled, or we just need to wait for it.
+        await expect(page.locator('#btn-install-header')).not.toHaveClass(/hidden/);
+
+        // Local storage flag should be set
+        const dismissed = await page.evaluate(() => localStorage.getItem('pwa_dismissed'));
+        expect(dismissed).toBe('true');
+    });
+
+    test('Previously dismissed prompt only shows header button', async ({ page }) => {
+        await page.evaluate(() => localStorage.setItem('pwa_dismissed', 'true'));
+
+        // Fire fake beforeinstallprompt event
+        await page.evaluate(() => {
+            const event = new Event('beforeinstallprompt');
+            window.dispatchEvent(event);
+        });
+
+        // Banner should remain hidden
+        await expect(page.locator('#pwa-install-banner')).toHaveClass(/hidden/);
+
+        // Header button should become visible
+        await expect(page.locator('#btn-install-header')).not.toHaveClass(/hidden/);
+    });
+});
+
 test.describe('Background Alert (Web Push)', () => {
     test.use({ viewport: { width: 400, height: 800 } });
 

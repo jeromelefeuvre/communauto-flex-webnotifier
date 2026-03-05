@@ -4,7 +4,8 @@ const AppState = {
     currentDistanceRadius: 600,
     userLocation: null,
     lastSearchLocation: null,
-    detectedCity: null
+    detectedCity: null,
+    installPromptEvent: null
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -360,6 +361,73 @@ const BackgroundAlert = {
         document.getElementById('bg-alert-indicator')?.classList.add('hidden');
     }
 };
+
+// ========== PWA INSTALL PROMPT ==========
+const PWA_BANNER_HIDE_DELAY_MS = 400;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    AppState.installPromptEvent = e;
+
+    // Check if the user previously dismissed the prompt
+    const hasDismissed = localStorage.getItem('pwa_dismissed') === 'true';
+    if (!hasDismissed) {
+        UIController.showPwaPromptUI();
+    } else {
+        // Just show the header button, not the banner
+        if (UIController.els.btnInstallHeader) {
+            UIController.els.btnInstallHeader.classList.remove('hidden');
+        }
+    }
+});
+
+window.addEventListener('appinstalled', (e) => {
+    // Hide all install UI when successfully installed
+    UIController.hidePwaPromptUI();
+    AppState.installPromptEvent = null;
+    console.log('PWA was installed');
+});
+
+// Setup click handlers for the install UI
+const handleInstallClick = async () => {
+    if (!AppState.installPromptEvent) return;
+
+    // Show the install prompt
+    AppState.installPromptEvent.prompt();
+
+    // Wait for the user to respond to the prompt
+    const { outcome } = await AppState.installPromptEvent.userChoice;
+    console.log(`User response to the install prompt: ${outcome}`);
+
+    // We've used the prompt, and can't use it again, throw it away
+    AppState.installPromptEvent = null;
+    UIController.hidePwaPromptUI();
+};
+
+if (UIController.els.btnInstallHeader) {
+    UIController.els.btnInstallHeader.addEventListener('click', handleInstallClick);
+}
+
+if (UIController.els.btnPwaInstall) {
+    UIController.els.btnPwaInstall.addEventListener('click', handleInstallClick);
+}
+
+if (UIController.els.btnPwaDismiss) {
+    UIController.els.btnPwaDismiss.addEventListener('click', () => {
+        // Save the decision so we don't nag them again with the large banner
+        localStorage.setItem('pwa_dismissed', 'true');
+        UIController.hidePwaPromptUI();
+
+        // Optionally, still reveal the header button if they want it later
+        setTimeout(() => {
+            if (UIController.els.btnInstallHeader) {
+                UIController.els.btnInstallHeader.classList.remove('hidden');
+            }
+        }, PWA_BANNER_HIDE_DELAY_MS + 100);
+    });
+}
 
 // Expose internal controllers to global window for E2E testing
 window.AppState = AppState;

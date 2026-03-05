@@ -28,13 +28,23 @@
                 <h1>Communauto Flex WebNotify</h1>
                 <p class="subtitle">Find your next ride instantly</p>
             </header>
+            <button id="btn-install-header" class="btn-install-header hidden" title="Install App">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Install</span>
+            </button>
         </div>
 
         <main class="map-container" id="map-wrapper">
             <div id="results-overlay" class="results-overlay">
                 <form id="notify-form">
                     <button type="button" id="btn-filter" class="filter-btn" title="Adjust search radius">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <line x1="4" y1="21" x2="4" y2="14"></line>
                             <line x1="4" y1="10" x2="4" y2="3"></line>
                             <line x1="12" y1="21" x2="12" y2="12"></line>
@@ -68,7 +78,7 @@
                         </button>
                         <button type="button" id="btn-stop" class="danger-btn hidden">
                             <svg width="16" height="16" viewBox="0 0 24 24">
-                                <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/>
+                                <rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" />
                             </svg>
                         </button>
                     </div>
@@ -133,6 +143,22 @@
             jeromelefeuvre/communauto-flex-webnotifier
         </a>
         <span id="app-version" class="version-badge">v...</span>
+    </div>
+
+    <div id="pwa-install-banner" class="pwa-install-banner hidden">
+        <div class="pwa-banner-content">
+            <div class="pwa-icon-wrapper">
+                <img src="static/images/apple-touch-icon.png" alt="App Icon">
+            </div>
+            <div class="pwa-text">
+                <strong>Install Communauto Flex Notify</strong>
+                <p>For quick access and background alerts</p>
+            </div>
+        </div>
+        <div class="pwa-actions">
+            <button id="btn-pwa-dismiss" class="pwa-dismiss">Not Now</button>
+            <button id="btn-pwa-install" class="primary-btn pwa-install-btn">Install</button>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
