@@ -209,3 +209,109 @@
     background: var(--accent-color);
     color: #fff;
 }
+
+/* PWA Install Button in Header */
+.btn-install-header {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-color);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-install-header:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.btn-install-header.hidden {
+    display: none;
+}
+
+/* PWA Install Bottom Banner */
+.pwa-install-banner {
+    position: fixed;
+    bottom: 40px;
+    /* Above the app banner */
+    left: 50%;
+    transform: translateX(-50%) translateY(150%);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 999;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    visibility: hidden;
+}
+
+.pwa-install-banner.visible {
+    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+}
+
+.pwa-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pwa-icon-wrapper img {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.pwa-text strong {
+    font-size: 15px;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.pwa-text p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.pwa-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.pwa-dismiss {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 6px 10px;
+    transition: color 0.2s;
+}
+
+.pwa-dismiss:hover {
+    color: var(--text-primary);
+}
+
+.pwa-install-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+}

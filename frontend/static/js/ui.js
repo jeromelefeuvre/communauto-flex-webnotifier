@@ -19,7 +19,11 @@ const UIController = {
         delay: document.getElementById('delay'),
         mapWrapper: document.getElementById('map-wrapper'),
         formInputs: document.getElementById('form-inputs'),
-        distanceValue: document.getElementById('distance-value')
+        distanceValue: document.getElementById('distance-value'),
+        btnInstallHeader: document.getElementById('btn-install-header'),
+        pwaInstallBanner: document.getElementById('pwa-install-banner'),
+        btnPwaDismiss: document.getElementById('btn-pwa-dismiss'),
+        btnPwaInstall: document.getElementById('btn-pwa-install')
     },
 
     toggleSearching: function () {
@@ -154,5 +158,29 @@ const UIController = {
         MapController.clearRoutes();
         MapController.carMarkers.forEach(m => MapController.map.removeLayer(m));
         MapController.carMarkers = [];
+    },
+
+    showPwaPromptUI: function () {
+        if (this.els.btnInstallHeader) {
+            this.els.btnInstallHeader.classList.remove('hidden');
+        }
+        if (this.els.pwaInstallBanner) {
+            this.els.pwaInstallBanner.classList.remove('hidden');
+            setTimeout(() => {
+                this.els.pwaInstallBanner.classList.add('visible');
+            }, 50);
+        }
+    },
+
+    hidePwaPromptUI: function () {
+        if (this.els.btnInstallHeader) {
+            this.els.btnInstallHeader.classList.add('hidden');
+        }
+        if (this.els.pwaInstallBanner) {
+            this.els.pwaInstallBanner.classList.remove('visible');
+            setTimeout(() => {
+                this.els.pwaInstallBanner.classList.add('hidden');
+            }, 400);
+        }
     }
 };
