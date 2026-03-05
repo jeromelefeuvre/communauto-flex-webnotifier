@@ -37,36 +37,44 @@
     }
 
     .top-bar-container {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        column-gap: 8px;
+        row-gap: 2px;
         border-radius: 0;
         border: none;
         border-bottom: 1px solid var(--border-color);
-        padding: 8px 16px;
+        padding: 10px 16px;
     }
 
     header {
-        text-align: left;
-        min-width: 0; /* Allows text truncation in flex container */
-        flex-shrink: 1; /* Allows header to shrink */
-        margin-right: 12px;
+        display: contents;
     }
 
     header h1 {
+        grid-column: 1 / -1;
         font-size: 18px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        margin-bottom: 0;
     }
 
     .subtitle {
+        grid-column: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        align-self: center;
+        margin-bottom: 0;
     }
 
     .btn-install-header {
-        flex-shrink: 0; /* Ensure the button never shrinks and gets cut off */
-        padding: 6px 12px;
+        grid-column: 2;
+        justify-self: end;
+        padding: 4px 10px;
         font-size: 12px;
+        margin: 0;
     }
 
     .map-container {
